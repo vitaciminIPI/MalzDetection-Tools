@@ -5,12 +5,9 @@ from volatility3.framework import interfaces
 from volatility3.cli import PrintedProgress, MuteProgress
 from volatility3.framework import plugins
 from volatility3.cli import CommandLine as cmd
-import volatility3
 from volatility3.cli import text_renderer, volargparse
 from volatility3.framework import interfaces
-import sys, os, json
-import volatility3.framework.constants
-import argparse, inspect
+import os, json
 from typing import Dict, Type, Union, Any
 from urllib import parse, request
 from volatility3.framework.configuration import requirements
@@ -20,6 +17,13 @@ import re
 from time import sleep
 
 FILE_PATH = "wanncry.vmem"
+REGISTRY_KEY = ["MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE", "CURRENTCONTROLSET\\CONTROL\\HIVELIST", "CONTROLSET002\\CONTROL\\SESSION MANAGER", "CURRENTCONTROLSET\\SERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICESONCE", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\NOTIFY", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\USERINIT", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\SHELL"]
+
+def intToHex(listOfData):
+     lenOfData = len(listOfData)
+
+     for idx in range(lenOfData):
+        listOfData[idx] = hex(listOfData[idx]) 
 
 def addressCheck(address):
     try:
@@ -173,9 +177,73 @@ def main():
                                 ppidList.append(susPID)
                     else:
                         continue
-
+                
+                # gabungan PID dari network hingga ancestor dan anakannya
                 maliciousList = ppidList + uniquePID
-                print(maliciousList)
+
+                print("[+] Finding suspicious process that already exit")
+
+                psscan = vol2.run("windows.psscan.PsScan", FILE_PATH, [])
+
+                scanPPID = psscan["PPID"]
+                lenPPIDList = len(scanPPID)
+                hiddenPIDScan = []
+
+                for idx in range(lenPPIDList):
+                    if scanPPID[idx] in maliciousList:
+                        if scanPPID[idx] not in hiddenPIDScan:
+                            hiddenPIDScan.append(scanPPID[idx])
+                
+                print(f"Hidden Process : {hiddenPIDScan}")
+
+                # print(maliciousList)
+                listCMD = {}
+                listDLL = {}
+                listHanldes = {}
+                print("[+] Getting all cmd arguments. . .")
+
+                # print(listCMD) [1340, 2464, 1340, 2340, 2464, 2464, 1340]
+
+                for malz in maliciousList:
+                    # run cmd line
+                    cmdline = vol2.run("windows.cmdline.CmdLine", FILE_PATH, [malz])
+                    # saved cmdline
+                    listCMD.update(cmdline)
+                
+                print("[+] Getting all DLL from malicious process. . .")
+
+                for malz in maliciousList:
+                    dll = vol2.run("windows.dlllist.DllList", FILE_PATH, [malz])
+                    listDLL.update(dll)
+
+                intToHex(listDLL["Size"])
+                intToHex(listDLL["Name"])
+
+                # print(listDLL)
+
+                print("[+] Getting all handles from malicious process. . .")
+
+                for malz in maliciousList:
+                    handles = vol2.run("windows.handles.Handles", FILE_PATH, [malz])
+                    listHanldes.update(handles)
+                
+                # to hex : handles value, type, name
+                intToHex(listHanldes["HandleValue"])
+                intToHex(listHanldes["Type"])
+                intToHex(listHanldes["Name"])
+
+                # Cek persistence mechanism
+                # Cek dilakukan dengan cara mengecek registry key
+                # Yang biasanya ditempati malware
+                # Ex : MICROSOFT\WINDOWS\CURRENTVERSION\RUN
+                print("[+] Checking registry. . .")
+
+
+                printkey = vol2.run("windows.registry.printkey.PrintKey", FILE_PATH, [REGISTRY_KEY[0]])
+                intToHex(printkey["Time Hive"])
+                # print(printkey)
+
+                
 
             else:  # jika tidak ada malicious ip
                 pass

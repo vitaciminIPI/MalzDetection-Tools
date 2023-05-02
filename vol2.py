@@ -43,6 +43,54 @@ dictNetscan = {
     "Created" : []
 }
 
+dictCmdLine = {
+     "PID" : [],
+     "Process" : [],
+     "Args" : []
+}
+
+dictDLL = {
+     "PID" : [],
+     "Process Base" : [],
+     "Size" : [],
+     "Name" : [],
+     "Path" : [],
+     "Load Time" : [],
+     "File Output" : []
+}
+
+dictHandles = {
+     "PID" : [],
+     "Process Offset" : [],
+     "HandleValue" : [],
+     "Type" : [],
+     "GrantedAccess" : [],
+     "Name" : []
+}
+
+dictPsScan = {
+     "PID" : [],
+     "PPID" : [],
+     "ImageFileName" : [],
+     "Offset" : [],
+     "Threads" : [],
+     "Handles" : [],
+     "SessionId" : [],
+     "Wow64" : [],
+     "CreateTime" : [],
+     "ExitTime" : [],
+     "File output" : []
+}
+
+dictPrintKey = {
+     "Last Write" : [],
+     "Time Hive" : [],
+     "Offset" : [],
+     "Type" : [],
+     "Key" : [],
+     "Volatile" : []
+}
+
 """
 {'windows.statistics.Statistics': <class 'volatility3.plugins.windows.statistics.Statistics'>, 
 'timeliner.Timeliner': <class 'volatility3.plugins.timeliner.Timeliner'>, 
@@ -203,6 +251,73 @@ def renderersEx(grid: interfaces.renderers.TreeGrid, pluginName):
 
         return None
 
+    def visitor3(node: interfaces.renderers.TreeGrid, accumulator):
+        objecttest = grid.values(node)
+        
+        index = 0 
+        for key in dictCmdLine.keys():
+            if objecttest[index].__class__.__name__ == "NotApplicableValue":
+                dictCmdLine[key].append("N/A")
+            else:
+                dictCmdLine[key].append(objecttest[index])
+            index+=1
+
+        return None
+    
+    def visitor4(node: interfaces.renderers.TreeGrid, accumulator):
+        objecttest = grid.values(node)
+        
+        index = 0 
+        for key in dictDLL.keys():
+            if objecttest[index].__class__.__name__ == "NotApplicableValue":
+                dictDLL[key].append("N/A")
+            else:
+                dictDLL[key].append(objecttest[index])
+            index+=1
+
+        return None
+
+    def visitor5(node: interfaces.renderers.TreeGrid, accumulator):
+        objecttest = grid.values(node)
+        
+        index = 0 
+        for key in dictHandles.keys():
+            if objecttest[index].__class__.__name__ == "NotApplicableValue":
+                dictHandles[key].append("N/A")
+            else:
+                dictHandles[key].append(objecttest[index])
+            index+=1
+
+        return None
+    
+    def visitor6(node: interfaces.renderers.TreeGrid, accumulator):
+        objecttest = grid.values(node)
+        
+        index = 0 
+        for key in dictPsScan.keys():
+            if objecttest[index].__class__.__name__ == "NotApplicableValue":
+                dictPsScan[key].append("N/A")
+            else:
+                dictPsScan[key].append(objecttest[index])
+            index+=1
+
+        return None
+    
+    def visitor7(node: interfaces.renderers.TreeGrid, accumulator):
+        objecttest = grid.values(node)
+        
+        index = 0 
+        for key in dictPrintKey.keys():
+            if objecttest[index].__class__.__name__ == "NotApplicableValue":
+                dictPrintKey[key].append("N/A") 
+            elif objecttest[index].__class__.__name__ == "UnreadableValue" :
+                dictPrintKey[key].append("-")
+            else:
+                dictPrintKey[key].append(objecttest[index])
+            index+=1
+
+        return None
+
         # if pluginName == "windows.pslist.PsList":    
         #     for key in dictPslist.keys():
         #         if objecttest[index].__class__.__name__ == "NotApplicableValue":
@@ -223,6 +338,16 @@ def renderersEx(grid: interfaces.renderers.TreeGrid, pluginName):
         grid.populate(visitor)
     elif pluginName == "windows.pslist.PsList":
          grid.populate(visitor2)
+    elif pluginName == "windows.cmdline.CmdLine":
+        grid.populate(visitor3)
+    elif pluginName == "windows.dlllist.DllList":
+        grid.populate(visitor4)
+    elif pluginName == "windows.handles.Handles":
+        grid.populate(visitor5)
+    elif pluginName == "windows.psscan.PsScan":
+        grid.populate(visitor6)
+    elif pluginName == "windows.registry.printkey.PrintKey":
+        grid.populate(visitor7)
 
 
 # def renderersExTwo(grid: interfaces.renderers.TreeGrid):
@@ -284,10 +409,9 @@ def run(pluginName, filePath, argument):
     args.plugin = pluginName
     # "wanncry.vmem"
     args.file = filePath
-
     if pluginName == "windows.netscan.NetScan":
         # [1340]
-        args.pid = argument[0]
+        args.pid = [argument[0]]
     elif pluginName == "windows.pslist.PsList":
         if argument:
             args.physical = argument[0]
@@ -296,24 +420,30 @@ def run(pluginName, filePath, argument):
     elif pluginName == "windows.pstree.PsTree":
         args.physical = argument[0]
         args.pid = argument[1]
-    elif pluginName == "windows.pstree.PsScan":
-        args.physical = argument[0]
-        args.pid = argument[1]
-        args.dump = argument[2]
+    elif pluginName == "windows.psscan.PsScan":
+        if argument:
+            args.physical = argument[0]
+            args.pid = [argument[1]]
+            args.dump = argument[2]
     elif pluginName == "windows.dlllist.DllList":
-        args.pid = argument[0]
-        args.dump = argument[1]
+        if argument:
+            # harus dalam list
+            args.pid = [argument[0]]
+            # args.dump = argument[1]
     elif pluginName == "windows.handles.Handles":
-        args.pid = argument[0]
+        if argument:
+            args.pid = [argument[0]]
     elif pluginName == "windows.registry.printkey.PrintKey":
-        args.offset = argument[0]
-        args.key = argument[1]
-        args.recurse = argument[2]
+        if argument:
+            # args.offset = argument[0]
+            args.key = argument[0]
+            # args.recurse = argument[2]
     elif pluginName == "windows.malfind.Malfind":
         args.pid = argument[0]
         args.dump = argument[1]
     elif pluginName == "windows.cmdline.CmdLine":
-        args.pid = argument[0]
+        if argument:
+            args.pid = [argument[0]]
 
     plugin = plugin_list[args.plugin]
     chosen_configurables_list[args.plugin] = plugin
@@ -324,8 +454,9 @@ def run(pluginName, filePath, argument):
     plugin_config_path = interfaces.configuration.path_join(
                 base_config_path, plugin.__name__
             )
+    
     cmds = cmd()
-
+ 
     file_name = os.path.abspath(args.file)
     if not os.path.exists(file_name):
                     print("File does not exist")
@@ -347,6 +478,16 @@ def run(pluginName, filePath, argument):
         return dictNetscan
     elif pluginName == "windows.pslist.PsList":
          return dictPslist
+    elif pluginName == "windows.cmdline.CmdLine":
+         return dictCmdLine
+    elif pluginName == "windows.dlllist.DllList":
+         return dictDLL
+    elif pluginName == "windows.handles.Handles":
+         return dictHandles
+    elif pluginName == "windows.psscan.PsScan":
+         return dictPsScan
+    elif pluginName == "windows.registry.printkey.PrintKey":
+         return dictPrintKey
 
 if __name__ == '__main__':
      run()
