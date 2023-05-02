@@ -407,6 +407,8 @@ def run(pluginName, filePath, argument):
     
     # "windows.malfind.Malfind"
     args.plugin = pluginName
+    # set output dir
+    args.output_dir = "./dumped/"
     # "wanncry.vmem"
     args.file = filePath
     if pluginName == "windows.netscan.NetScan":
@@ -415,7 +417,7 @@ def run(pluginName, filePath, argument):
     elif pluginName == "windows.pslist.PsList":
         if argument:
             args.physical = argument[0]
-            args.pid = argument[1]
+            args.pid = [argument[1]]
             args.dump = argument[2]
     elif pluginName == "windows.pstree.PsTree":
         args.physical = argument[0]
@@ -429,7 +431,7 @@ def run(pluginName, filePath, argument):
         if argument:
             # harus dalam list
             args.pid = [argument[0]]
-            # args.dump = argument[1]
+            args.dump = argument[1]
     elif pluginName == "windows.handles.Handles":
         if argument:
             args.pid = [argument[0]]
@@ -456,6 +458,9 @@ def run(pluginName, filePath, argument):
             )
     
     cmds = cmd()
+
+    # set output dir
+    cmds.output_dir = args.output_dir
  
     file_name = os.path.abspath(args.file)
     if not os.path.exists(file_name):

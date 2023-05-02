@@ -1,23 +1,55 @@
-from volatility3.framework import contexts
-from volatility3.framework import automagic
-from volatility3 import framework
-from volatility3.framework import interfaces
-from volatility3.cli import PrintedProgress, MuteProgress
-from volatility3.framework import plugins
-from volatility3.cli import CommandLine as cmd
-from volatility3.cli import text_renderer, volargparse
-from volatility3.framework import interfaces
 import os, json
-from typing import Dict, Type, Union, Any
-from urllib import parse, request
-from volatility3.framework.configuration import requirements
 import vol2
 import requests
 import re 
+import hashlib
+import sys
 from time import sleep
 
 FILE_PATH = "wanncry.vmem"
 REGISTRY_KEY = ["MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE", "CURRENTCONTROLSET\\CONTROL\\HIVELIST", "CONTROLSET002\\CONTROL\\SESSION MANAGER", "CURRENTCONTROLSET\\SERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICESONCE", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\NOTIFY", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\USERINIT", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\SHELL"]
+
+def checksumVT(fileHash):
+    clientAPIKey = "3e7b7c1801535998c249f13d8bfe6b5739ffbc1eaeb4ffe26341f46812d4041e"
+    if clientAPIKey:
+        try:
+            print("\\-->[*] SHA256 SUM : " + fileHash)
+            url = "https://www.virustotal.com/api/v3/files/" + fileHash
+            headers = {
+                'x-apikey' : clientAPIKey
+            }
+            response = requests.get(url, headers=headers)
+            responseCode = response.status_code
+            json_resp = json.loads(response.text)
+
+            if responseCode == 200:
+                print("//--> [*] Malicious : " + str(json_resp['data']['attributes']['last_analysis_stats']['malicious']) + " %")
+                print("//--> [*] Harmless : " + str(json_resp['data']['attributes']['last_analysis_stats']['harmless']) + " %")
+                print("//--> [*] Undetected : " + str(json_resp['data']['attributes']['last_analysis_stats']['undetected']) + " %")
+                print("//--> [*] Suspicious : " + str(json_resp['data']['attributes']['last_analysis_stats']['suspicious']) + " %")
+                print("//--> [*] Failure : " + str(json_resp['data']['attributes']['last_analysis_stats']['failure']) + " %")
+                print("//--> [*] Timeout : " + str(json_resp['data']['attributes']['last_analysis_stats']['timeout']) + " %")
+                print("//--> [*] Confirmed-Timeout : " + str(json_resp['data']['attributes']['last_analysis_stats']['confirmed-timeout']) + " %")
+                print("//--> [*] Type-Unsupported : " + str(json_resp['data']['attributes']['last_analysis_stats']['type-unsupported']) + " %")
+            else:
+                print("\\--> [!] Error")
+                print(json_resp['error']['message'])
+
+        except ConnectionError as e:
+            print(f"[!] Error : {e}")
+    else:
+        print('[!] Error : Invalid ClientAPIKey')
+        sys.exit()
+
+def getFileHash(pathFile):
+    try:
+        with open(pathFile, 'rb') as f:
+            data = f.read()
+            sha256 = hashlib.sha256(data).hexdigest()
+            return sha256
+    except FileNotFoundError as e:
+        print(e)
+        return ""
 
 def intToHex(listOfData):
      lenOfData = len(listOfData)
@@ -194,7 +226,8 @@ def main():
                         if scanPPID[idx] not in hiddenPIDScan:
                             hiddenPIDScan.append(scanPPID[idx])
                 
-                print(f"Hidden Process : {hiddenPIDScan}")
+                if hiddenPIDScan:
+                    print(f"Hidden Process : {hiddenPIDScan}")
 
                 # print(maliciousList)
                 listCMD = {}
@@ -213,7 +246,7 @@ def main():
                 print("[+] Getting all DLL from malicious process. . .")
 
                 for malz in maliciousList:
-                    dll = vol2.run("windows.dlllist.DllList", FILE_PATH, [malz])
+                    dll = vol2.run("windows.dlllist.DllList", FILE_PATH, [malz, False])
                     listDLL.update(dll)
 
                 intToHex(listDLL["Size"])
@@ -243,7 +276,29 @@ def main():
                 intToHex(printkey["Time Hive"])
                 # print(printkey)
 
+                # dump process
+                print("[+] Start to dump the process")
+
+                for malz in maliciousList:
+                    print(f"[+] Dumping process {malz}")
+                    vol2.run("windows.pslist.PsList", FILE_PATH, [None, malz, True])
+
+                # iterate isi directory
+                folder_path = "./dumped/"
+                # cek berapa banyak file
+                file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
+                # ambil hash dan cek ke virus total
+                for file_name in os.listdir(folder_path):
+                    file_path = os.path.join(folder_path, file_name)
+                    if os.path.isfile(file_path):
+                        if file_count >= 5:
+                            sleep(15)
+                        file_hash = getFileHash(file_path)
+                        # cek ke vt
+                        print(f"\-->[*] File Name : {file_name} ")
+                        checksumVT(file_hash)
                 
+                        
 
             else:  # jika tidak ada malicious ip
                 pass
