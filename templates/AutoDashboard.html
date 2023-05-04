@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoVolt Manual</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style>
+        #side_nav {
+            background: black;
+            min-width: 250px;
+            max-width: 250px;
+            padding-top: 5vh;
+        }
+
+        .navbar {
+            margin: 0;
+            padding: 0;
+        }
+
+        .custom-navbar .navbar {
+            padding: 0 !important;
+        }
+
+        li {
+            color: white;
+        }
+
+        .vl {
+            border-left: 6px solid white;
+            height: 100%;
+        }
+
+        .dim {
+            opacity: 0.2;
+            cursor: not-allowed;
+        }
+
+        select {
+            width: 210px;
+            font-size: 18px;
+            outline: none;
+        }
+
+        .subparser {
+            margin-bottom: 20px;
+        }
+
+        .messagecommand {
+            color: white;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .btn-circle {
+            border-radius: 50%;
+            height: 10em;
+            width: 10em;
+            font-size: 1.5em;
+            color: black;
+			background-color: white;
+			border: none;
+			cursor: pointer;
+        }
+    </style>
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Our Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
+
+    <!-- Font Awesome JS -->
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
+        integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
+        crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
+        integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY"
+        crossorigin="anonymous"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top" style="background: #404040;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="./index.html" style="color: white;">Auto Volt <span
+                    style="font-size: 11px;">v1.0</span></a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav mx-5  me-auto mb-2 mb-lg-0">
+                    <li class="nav-item ms-3 me-5" style="margin: 0;padding: 0;">
+                        <div class="vl"></div>
+                    </li>
+                    <li class="nav-item">
+                        <h5 class="mt-2" style="font-size: 20px;">Web Interface For Volatility
+                            Framework
+                            3.0</h5>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <nav id="sidebar">
+
+            <ul class="list-unstyled components">
+                <h4 class="mt-3 mx-2" name="my-form" id="my-form">We will analyze the memory file without wasting your
+                    time</h4>
+                <!-- <form name="my-form" id="my-form" action="#" method="post">
+                </form> -->
+            </ul>
+        </nav>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <button type="button" id="sidebarCollapse" class="btn btn-info">
+                <i class="fas fa-align-left"></i>
+            </button>
+            <button class="btn btn-dark d-inline-block d-lg-none ml-auto sticky-top" type="button"
+                data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fas fa-align-justify"></i>
+            </button>
+            <div class="center">
+                <button class="btn-circle">Start</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery CDN - Slim version (=without AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Popper.JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"
+        integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ"
+        crossorigin="anonymous"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"
+        integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm"
+        crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        function showInput() {
+            var pidField = document.getElementById("pid-field");
+            var offsetField = document.getElementById("offset-field");
+            var keyField = document.getElementById("key-field");
+            var dumpCheck = document.getElementById("dump");
+            var physicalField = document.getElementById("physical-field");
+            var includeCorrupt = document.getElementById("include-corrupt");
+            var recurseCheck = document.getElementById("recurse");
+            var command = document.getElementById("command").value;
+
+            if (command == "pslist" || command == "pstree" || command == "psscan" || command == "dlllist" || command == "handles" || command == "malfind" || command == "cmdline") {
+                pidField.style.display = "block";
+            } else {
+                pidField.style.display = "none";
+            }
+            if (command == "pslist" || command == "pstree" || command == "psscan") {
+                physicalField.style.display = "block";
+            } else {
+                physicalField.style.display = "none";
+            }
+            if (command == "printkey") {
+                offsetField.style.display = "block";
+                keyField.style.display = "block";
+                recurseCheck.style.display = "block";
+            } else {
+                offsetField.style.display = "none";
+                keyField.style.display = "none";
+                recurseCheck.style.display = "none";
+            }
+            if (command == "netscan" || command == "netstat") {
+                includeCorrupt.style.display = "block";
+            } else {
+                includeCorrupt.style.display = "none";
+            }
+            if (command == "pslist" || command == "psscan" || command == "dlllist" || command == "malfind") {
+                dumpCheck.style.display = "block";
+            } else {
+                dumpCheck.style.display = "none";
+            }
+        }
+        document.getElementById("my-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+            var pidValue = document.getElementById("pid-fieldvalue").value;
+            var offsetValue = document.getElementById("offset-fieldvalue").value;
+            var keyValue = document.getElementById("key-fieldvalue").value;
+            if (document.getElementById("dumpCheck").checked) {
+                document.getElementById("dumpCheck").value = "true"
+            } else {
+                document.getElementById("dumpCheck").value = "false"
+            }
+            if (document.getElementById("include-corruptCheck").checked) {
+                document.getElementById("include-corruptCheck").value = "true";
+            } else {
+                document.getElementById("include-corruptCheck").value = "false"
+            }
+            if (document.getElementById("recurseCheck").checked) {
+                document.getElementById("recurseCheck").value = "true";
+            } else {
+                document.getElementById("recurseCheck").value = "false"
+            }
+            if (document.getElementById("physical-check").checked) {
+                document.getElementById("physical-check").value = "true";
+            } else {
+                document.getElementById("physical-check").value = "false"
+            }
+            var command = document.getElementById("command").value;
+            var filePath = document.getElementById("file-path").value;
+            $.ajax({
+                type: "POST", // method request
+                url: "/process-form", // url request
+                data: $('form').serialize(), // data yang dikirimkan
+                success: function (result) { // response sukses
+                    // $("#message").text("Command: " + result.message);
+                    // $.each(result, function (key, value) {
+                    //     console.log(key + ": " + value);
+                    //     // atau Anda bisa menambahkan kode untuk menampilkan data tersebut di halaman web
+                    // });
+                    var html = '';
+                    $.each(result, function (key, value) {
+                        html += key + ": " + value + "<br>";
+                    });
+                    $('#result').html(html);
+                },
+                error: function (xhr, status, error) { // response gagal
+                    console.log(xhr.responseText); // menampilkan pesan error di console log
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
+                $(this).toggleClass('dim');
+            });
+        });
+        var button = document.getElementById("sidebarCollapse"); // Ganti "myButton" dengan ID tombol Anda
+        var sidebar = document.getElementById("sidebar"); // Ganti "mySidebar" dengan ID sidebar Anda
+
+        function shiftButton() {
+            if (sidebar.classList.contains("active")) {
+                button.style.left = "0";
+            } else {
+                button.style.left = "260px"; // Ganti "200px" dengan jarak yang diinginkan dari sisi kanan
+            }
+        }
+
+        sidebar.addEventListener("transitionend", shiftButton);
+
+        sidebar.addEventListener("transitionstart", shiftButton);
+
+        window.addEventListener("resize", shiftButton);
+    </script>
+</body>
+
+
+</html>
+<!-- @app.route('/process-form', methods=['POST'])
+def process_form():
+    command = request.form.get("physical-check")
+    if command == 'true':
+        return jsonify({"message": "true"})       
+    else:
+        return jsonify({"message": "false"}) -->
