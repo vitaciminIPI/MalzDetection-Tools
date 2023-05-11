@@ -8,7 +8,7 @@ from volatility3.cli import CommandLine as cmd
 import volatility3
 from volatility3.cli import text_renderer, volargparse
 from volatility3.framework import interfaces
-import sys, os, json
+import os
 import volatility3.framework.constants
 import argparse, inspect
 from typing import Dict, Type, Union, Any
