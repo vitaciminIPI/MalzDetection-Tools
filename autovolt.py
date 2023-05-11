@@ -10,6 +10,7 @@ FILE_PATH = "wanncry.vmem"
 REGISTRY_KEY = ["MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE", "CURRENTCONTROLSET\\CONTROL\\HIVELIST", "CONTROLSET002\\CONTROL\\SESSION MANAGER", "CURRENTCONTROLSET\\SERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICESONCE", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\NOTIFY", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\USERINIT", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\SHELL"]
 LEGAL_PROCNAME = ["System", "smss.exe", "csrss.exe", "wininit.exe", "services.exe", "svchost.exe", "lsass.exe", "winlogon.exe", "explorer.exe", "taskhostw.exe", "RuntimeBroker.exe"]
 IS_SPOOF = False
+OUTPUT_PATH = "./dumped/"
 
 def isValidIPv4(ip_str):
     # check apakah string berformat ipv4
@@ -128,8 +129,9 @@ def main():
     if os.path.isfile(FILE_PATH):
         try:
             print("[+] Scanning the Network using Netscan")
-            netscan = vol2.run("windows.netscan.NetScan", FILE_PATH, [1340])
-            temp = netscan["ForeignAddress"]
+            netscan = vol2.run("windows.netscan.NetScan", FILE_PATH, OUTPUT_PATH, [])
+
+            temp = netscan["ForeignAddr"]
             filteredIp = []
             
             print("[+] Filtering IP Address")
@@ -193,19 +195,25 @@ def main():
                             # [7, 36, 37, 39]
                             indexOfMaliciousIP.append(temp.index(ad))
                     
+                    print(f"idx of mals : {indexOfMaliciousIP}")
+
                     # Get all malicious PID to find the ancestor
                     for idx in indexOfMaliciousIP:
-                        maliciousPID.append(netscan["PID"][idx])
+                        index = netscan["PID"][idx]
+                        maliciousPID.append(index)
                     
+                    print(f"malicious pid : {maliciousPID}")
                     # PID: [2092, 2092, 2092, 2092]
                     # print(f"PID: {maliciousPID}")
                     print("[+] Getting malicious PID")
-                    # PID: [2092]
+                    # # PID: [2092]
                     uniquePID = list(set(maliciousPID))
 
-                    # Run pslist plugin
+                    # print(uniquePID)
+                    # # Run pslist plugin
                     print("[+] Scanning running process. . .")
-                    pslist = vol2.run("windows.pslist.PsList", FILE_PATH, [])
+                    pslist = vol2.run("windows.pslist.PsList", FILE_PATH, OUTPUT_PATH, [])
+                    # print(pslist)
                     
                     ppidList = []
                     notOrphan = True
@@ -213,6 +221,7 @@ def main():
                     print("[+] Find the parent process. . .")
                     # Find the parent process and the child process
                     for pid in uniquePID:
+                        # print(pid)
                         # dapetin indx dari 2092
                         idx = pslist["PID"].index(pid)
                         # dapetin ppid dari 2092 -> 2340
@@ -269,7 +278,7 @@ def main():
 
                     print("[+] Finding suspicious process that already exit")
 
-                    psscan = vol2.run("windows.psscan.PsScan", FILE_PATH, [])
+                    psscan = vol2.run("windows.psscan.PsScan", FILE_PATH, OUTPUT_PATH, [])
 
                     scanPPID = psscan["PPID"]
                     lenPPIDList = len(scanPPID)
@@ -293,31 +302,31 @@ def main():
 
                     for malz in maliciousList:
                         # run cmd line
-                        cmdline = vol2.run("windows.cmdline.CmdLine", FILE_PATH, [malz])
+                        cmdline = vol2.run("windows.cmdline.CmdLine", FILE_PATH, OUTPUT_PATH, [malz])
                         # saved cmdline
                         listCMD.update(cmdline)
                     
                     print("[+] Getting all DLL from malicious process. . .")
 
                     for malz in maliciousList:
-                        dll = vol2.run("windows.dlllist.DllList", FILE_PATH, [malz, False])
+                        dll = vol2.run("windows.dlllist.DllList", FILE_PATH, OUTPUT_PATH, [malz, False])
                         listDLL.update(dll)
 
                     intToHex(listDLL["Size"])
-                    intToHex(listDLL["Name"])
+                    intToHex(listDLL["Base"])
 
                     # print(listDLL)
 
                     print("[+] Getting all handles from malicious process. . .")
 
                     for malz in maliciousList:
-                        handles = vol2.run("windows.handles.Handles", FILE_PATH, [malz])
+                        handles = vol2.run("windows.handles.Handles", FILE_PATH, OUTPUT_PATH, [malz])
                         listHanldes.update(handles)
                     
                     # to hex : handles value, type, name
+                    intToHex(listHanldes["Offset"])
                     intToHex(listHanldes["HandleValue"])
-                    intToHex(listHanldes["Type"])
-                    intToHex(listHanldes["Name"])
+                    intToHex(listHanldes["GrantedAccess"])
 
                     # Cek persistence mechanism
                     # Cek dilakukan dengan cara mengecek registry key
@@ -326,8 +335,8 @@ def main():
                     print("[+] Checking registry. . .")
 
 
-                    printkey = vol2.run("windows.registry.printkey.PrintKey", FILE_PATH, [REGISTRY_KEY[0]])
-                    intToHex(printkey["Time Hive"])
+                    printkey = vol2.run("windows.registry.printkey.PrintKey", FILE_PATH, OUTPUT_PATH, [REGISTRY_KEY[0]])
+                    intToHex(printkey["Hive Offset"])
                     # print(printkey)
 
                     # dump process
@@ -335,10 +344,10 @@ def main():
 
                     for malz in maliciousList:
                         print(f"[+] Dumping process {malz}")
-                        vol2.run("windows.pslist.PsList", FILE_PATH, [None, malz, True])
+                        vol2.run("windows.pslist.PsList", FILE_PATH, OUTPUT_PATH, [None, malz, True])
 
                     # iterate isi directory
-                    folder_path = "./dumped/"
+                    folder_path = OUTPUT_PATH
                     # cek berapa banyak file
                     file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
                     print("[+] Checking file to virus total")
@@ -351,290 +360,140 @@ def main():
                             file_hash = getFileHash(file_path)
                             # cek ke vt
                             print(f"\-->[*] File Name : {file_name} ")
-                            checksumVT(file_hash)                        
+                            checksumVT(file_hash)
+                sys.exit()                           
             
-                else:  # jika tidak ada malicious ip dan gada network
-                    # check pid apakah ada yang duplikat
-                    # isSpoof = False
-                    # pslist = vol2.run("windows.pslist.PsList", FILE_PATH, [])
+            # Kalo gada filtered IP dan malicious ip
+            # else:
+            pslist = vol2.run("windows.pslist.PsList", FILE_PATH, [])
+            procList = pslist["Image"]
+            dup = []
+            indcs = []
+            anchestorindcs = []
+            pidlist = pslist["PID"]
 
-                    # procList = pslist["Image"]
-                    # dup = []
-                    # indcs = []
-
-                    # # iterate image name
-                    # for idx, element in enumerate(procList):
-                    #     if procList.count(element) > 1:
-                    #         if element not in dup:
-                    #             dup.append(element)
-                    #             indcs.append([idx])
-                    #         else:
-                    #             indcs[dup.index(element)].append(idx)
-
-                    # # jika tidak ada duplikat process name
-                    # if not dup:
-                    #     print("[+] Everything's fine :)")
-                    #     sys.exit()
-                    # # klo ada duplikat process name
-                    # else:
-                    #     pass
-                    pslist = vol2.run("windows.pslist.PsList", FILE_PATH, [])
-                    procList = pslist["Image"]
-                    dup = []
-                    indcs = []
-                    anchestorindcs = []
-                    pidlist = pslist["PID"]
-
-                    # iterate image name
-                    for idx, element in enumerate(procList):
-                        if procList.count(element) > 1:
-                            if element not in dup:
-                                dup.append(element)
-                                indcs.append([idx])
-                            else:
-                                indcs[dup.index(element)].append(idx)
-
-                    # jika tidak ada duplikat process name
-                    if not dup:
-                        print("[+] Everything's fine :)")
-                        # sys.exit()
-                    # klo ada duplikat process name
+            # iterate image name
+            for idx, element in enumerate(procList):
+                if procList.count(element) > 1:
+                    if element not in dup:
+                        dup.append(element)
+                        indcs.append([idx])
                     else:
-                        anchestorindcs = indcs
-                        pidOfSpoof = []
-                        for i, dups in enumerate(dup):
-                            print(f"Checking process : {dups}")
-                            # check anchestor pid
-                            # lalu masukkan ke dalam list
-                            for idx, idxOfPid in enumerate(indcs[i]):
-                                pid = pidlist[idxOfPid]
-                                anchestorPid = findAnchestor(pslist, pid)
-                                anchestorindcs[i][idx] = anchestorPid
-                                print(f"Anchestor of pid {pid} : {anchestorPid}")
+                        indcs[dup.index(element)].append(idx)
 
-                        for indx, process in enumerate(dup):
-                            # cek process yg tidak punya parent
-                            print(f"Check process : {process}")
-                            uniqueList = set(anchestorindcs[indx])
-                            sizeListUnique  = len(uniqueList)
-                            
-                            if process == "csrss.exe" or process == "System" or process == "wininit.exe" or process == "winlogon.exe" or process == "explorer.exe":
-                                # cek apakah pid mereka ada dalam pslist
-                                # jika ada, spoof
-                                for pid in anchestorindcs[indx]:
-                                    ppidIdx = pslist["PID"].index(pid)
-                                    ppid = pslist["PPID"][ppidIdx] # dapetin ppid
-                                    # cek klo ppid ada di pid
-                                    # pasti spoof
-                                    if ppid in pslist["PID"]:
-                                        # isSpoof = True
-                                        if indx not in pidOfSpoof:
-                                            pidOfSpoof.append(pid)
-                            else:
-                                # cek apakah pid ada yang berbeda
-                                # klo cuma 2 atau memungkinkan malicious
-                                if sizeListUnique >= 2:
-                                    # isSpoof = True
-                                    for pid in anchestorindcs[indx]:
-                                        pidOfSpoof.append(pid)
-                                elif sizeListUnique == 1:
-                                    continue
-                                else:
-                                    print("[!] Error : Somethings wrong")
-                        
-                        print(f"idx spoof : {pidOfSpoof}")
-                        
-                        # cek k vt
-                        for pid in pidOfSpoof:
-                            print(f"Dumping pid {pid}")
-                            vol2.run("windows.pslist.PsList", FILE_PATH, [None, pid, True])
-
-                        # iterate isi directory
-                        folder_path = "./dumped/"
-                        # cek berapa banyak file
-                        file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
-                        print("[+] Checking file to virus total")
-                        # ambil hash dan cek ke virus total
-                        for file_name in os.listdir(folder_path):
-                            file_path = os.path.join(folder_path, file_name)
-                            if os.path.isfile(file_path):
-                                if file_count >= 5:
-                                    sleep(15)
-                                file_hash = getFileHash(file_path)
-                                # cek ke vt
-                                print(f"\-->[*] File Name : {file_name} ")
-                                checksumVT(file_hash)                        
-
-                    # klo ada spoof
-                    if IS_SPOOF:
-                        for pid in pidOfSpoof:
-                            print("Getting commandline")
-                            cmdline = vol2.run("windows.cmdline.CmdLine", FILE_PATH, [pid])
-                            print("Getting dll") 
-                            dll = vol2.run("windows.dlllist.DllList", FILE_PATH, [pid, False])
-                            print("Getting handles")
-                            handles = vol2.run("windows.handles.Handles", FILE_PATH, [pid])
-                            print("Checking registry")
-                            printkey = vol2.run("windows.registry.printkey.PrintKey", FILE_PATH, [REGISTRY_KEY[0]])
-
-                    # klo gada spoof
-                    # pisahin legitimate process
-                    # dump sisanya
-                    else:
-                        temp = pslist
-                        # hapus legitimate windows process dari list
-                        for proc in LEGAL_PROCNAME:
-                            if proc in pslist["Image"]:
-                                while True:
-                                    if proc not in temp["Image"]:
-                                        break
-                                    index = temp["Image"].index(proc)
-                                    print(f"Idx : {index}, Process name : {proc}")
-                                    temp["Image"].remove(proc)
-                                    temp["PID"].pop(index)
-                                    temp["PPID"].pop(index)
-                                    temp["Offset"].pop(index)
-                                    temp["Threads"].pop(index)
-                                    temp["Handles"].pop(index)
-                                    temp["SessionId"].pop(index)
-                                    temp["Wow64"].pop(index)
-                                    temp["CreateTime"].pop(index)
-                                    temp["ExitTime"].pop(index)
-                                    temp["FileOutPut"].pop(index)
-                        
-                        # dump semua process
-                        for pid in temp["PID"]:
-                            vol2.run("windows.pslist.PsList", FILE_PATH, [None, pid, True])  
-            
-            # Kalo gada filtered IP
+            # jika tidak ada duplikat process name
+            if not dup:
+                print("[+] Everything's fine :)")
+                sys.exit()
+            # klo ada duplikat process name
             else:
-                pslist = vol2.run("windows.pslist.PsList", FILE_PATH, [])
-                procList = pslist["Image"]
-                dup = []
-                indcs = []
-                anchestorindcs = []
-                pidlist = pslist["PID"]
+                anchestorindcs = indcs
+                pidOfSpoof = []
+                for i, dups in enumerate(dup):
+                    print(f"Checking process : {dups}")
+                    # check anchestor pid
+                    # lalu masukkan ke dalam list
+                    for idx, idxOfPid in enumerate(indcs[i]):
+                        pid = pidlist[idxOfPid]
+                        anchestorPid = findAnchestor(pslist, pid)
+                        anchestorindcs[i][idx] = anchestorPid
+                        print(f"Anchestor of pid {pid} : {anchestorPid}")
 
-                # iterate image name
-                for idx, element in enumerate(procList):
-                    if procList.count(element) > 1:
-                        if element not in dup:
-                            dup.append(element)
-                            indcs.append([idx])
-                        else:
-                            indcs[dup.index(element)].append(idx)
-
-                # jika tidak ada duplikat process name
-                if not dup:
-                    print("[+] Everything's fine :)")
-                    # sys.exit()
-                # klo ada duplikat process name
-                else:
-                    anchestorindcs = indcs
-                    pidOfSpoof = []
-                    for i, dups in enumerate(dup):
-                        print(f"Checking process : {dups}")
-                        # check anchestor pid
-                        # lalu masukkan ke dalam list
-                        for idx, idxOfPid in enumerate(indcs[i]):
-                            pid = pidlist[idxOfPid]
-                            anchestorPid = findAnchestor(pslist, pid)
-                            anchestorindcs[i][idx] = anchestorPid
-                            print(f"Anchestor of pid {pid} : {anchestorPid}")
-
-                    for indx, process in enumerate(dup):
-                        # cek process yg tidak punya parent
-                        print(f"Check process : {process}")
-                        uniqueList = set(anchestorindcs[indx])
-                        sizeListUnique  = len(uniqueList)
-                        
-                        if process == "csrss.exe" or process == "System" or process == "wininit.exe" or process == "winlogon.exe" or process == "explorer.exe":
-                            # cek apakah pid mereka ada dalam pslist
-                            # jika ada, spoof
-                            for pid in anchestorindcs[indx]:
-                                ppidIdx = pslist["PID"].index(pid)
-                                ppid = pslist["PPID"][ppidIdx] # dapetin ppid
-                                # cek klo ppid ada di pid
-                                # pasti spoof
-                                if ppid in pslist["PID"]:
-                                    # isSpoof = True
-                                    if indx not in pidOfSpoof:
-                                        pidOfSpoof.append(pid)
-                        else:
-                            # cek apakah pid ada yang berbeda
-                            # klo cuma 2 atau memungkinkan malicious
-                            if sizeListUnique >= 2:
+                for indx, process in enumerate(dup):
+                    # cek process yg tidak punya parent
+                    print(f"Check process : {process}")
+                    uniqueList = set(anchestorindcs[indx])
+                    sizeListUnique  = len(uniqueList)
+                    
+                    if process == "csrss.exe" or process == "System" or process == "wininit.exe" or process == "winlogon.exe" or process == "explorer.exe":
+                        # cek apakah pid mereka ada dalam pslist
+                        # jika ada, spoof
+                        for pid in anchestorindcs[indx]:
+                            ppidIdx = pslist["PID"].index(pid)
+                            ppid = pslist["PPID"][ppidIdx] # dapetin ppid
+                            # cek klo ppid ada di pid
+                            # pasti spoof
+                            if ppid in pslist["PID"]:
                                 # isSpoof = True
-                                for pid in anchestorindcs[indx]:
+                                if indx not in pidOfSpoof:
                                     pidOfSpoof.append(pid)
-                            elif sizeListUnique == 1:
-                                continue
-                            else:
-                                print("[!] Error : Somethings wrong")
-                    
-                    print(f"idx spoof : {pidOfSpoof}")
-                    
-                    # cek k vt
-                    for pid in pidOfSpoof:
-                        print(f"Dumping pid {pid}")
-                        vol2.run("windows.pslist.PsList", FILE_PATH, [None, pid, True])
+                    else:
+                        # cek apakah pid ada yang berbeda
+                        # klo cuma 2 atau memungkinkan malicious
+                        if sizeListUnique >= 2:
+                            # isSpoof = True
+                            for pid in anchestorindcs[indx]:
+                                pidOfSpoof.append(pid)
+                        elif sizeListUnique == 1:
+                            continue
+                        else:
+                            print("[!] Error : Somethings wrong")
+                
+                print(f"idx spoof : {pidOfSpoof}")
+                
+                # cek k vt apakah beneran spoof
+                for pid in pidOfSpoof:
+                    print(f"Dumping pid {pid}")
+                    vol2.run("windows.pslist.PsList", FILE_PATH, [None, pid, True])
 
-                    # iterate isi directory
-                    folder_path = "./dumped/"
-                    # cek berapa banyak file
-                    file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
-                    print("[+] Checking file to virus total")
-                    # ambil hash dan cek ke virus total
-                    for file_name in os.listdir(folder_path):
-                        file_path = os.path.join(folder_path, file_name)
-                        if os.path.isfile(file_path):
-                            if file_count >= 5:
-                                sleep(15)
+                # iterate isi directory
+                folder_path = "./dumped/"
+                # cek berapa banyak file
+                file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
+                print("[+] Checking file to virus total")
+                # ambil hash dan cek ke virus total
+                for file_name in os.listdir(folder_path):
+                    file_path = os.path.join(folder_path, file_name)
+                    if os.path.isfile(file_path):
+                        if file_count >= 5:
+                            sleep(15)
+                        # bukan hidden file
+                        if not file_name.startswith("."):
                             file_hash = getFileHash(file_path)
                             # cek ke vt
                             print(f"\-->[*] File Name : {file_name} ")
                             checksumVT(file_hash)                        
 
-                # klo ada spoof
-                if IS_SPOOF:
-                    for pid in pidOfSpoof:
-                        print("Getting commandline")
-                        cmdline = vol2.run("windows.cmdline.CmdLine", FILE_PATH, [pid])
-                        print("Getting dll") 
-                        dll = vol2.run("windows.dlllist.DllList", FILE_PATH, [pid, False])
-                        print("Getting handles")
-                        handles = vol2.run("windows.handles.Handles", FILE_PATH, [pid])
-                        print("Checking registry")
-                        printkey = vol2.run("windows.registry.printkey.PrintKey", FILE_PATH, [REGISTRY_KEY[0]])
+            # klo ada spoof
+            if IS_SPOOF:
+                for pid in pidOfSpoof:
+                    print("Getting commandline")
+                    cmdline = vol2.run("windows.cmdline.CmdLine", FILE_PATH, [pid])
+                    print("Getting dll") 
+                    dll = vol2.run("windows.dlllist.DllList", FILE_PATH, [pid, False])
+                    print("Getting handles")
+                    handles = vol2.run("windows.handles.Handles", FILE_PATH, [pid])
+                    print("Checking registry")
+                    printkey = vol2.run("windows.registry.printkey.PrintKey", FILE_PATH, [REGISTRY_KEY[0]])
 
-                # klo gada spoof
-                # pisahin legitimate process
-                # dump sisanya
-                else:
-                    temp = pslist
-                    # hapus legitimate windows process dari list
-                    for proc in LEGAL_PROCNAME:
-                        if proc in pslist["Image"]:
-                            while True:
-                                if proc not in temp["Image"]:
-                                    break
-                                index = temp["Image"].index(proc)
-                                print(f"Idx : {index}, Process name : {proc}")
-                                temp["Image"].remove(proc)
-                                temp["PID"].pop(index)
-                                temp["PPID"].pop(index)
-                                temp["Offset"].pop(index)
-                                temp["Threads"].pop(index)
-                                temp["Handles"].pop(index)
-                                temp["SessionId"].pop(index)
-                                temp["Wow64"].pop(index)
-                                temp["CreateTime"].pop(index)
-                                temp["ExitTime"].pop(index)
-                                temp["FileOutPut"].pop(index)
-                    
-                    # dump semua process
-                    for pid in temp["PID"]:
-                        vol2.run("windows.pslist.PsList", FILE_PATH, [None, pid, True])
+            # klo gada spoof
+            # pisahin legitimate process
+            # dump sisanya
+            else:
+                temp = pslist
+                # hapus legitimate windows process dari list
+                for proc in LEGAL_PROCNAME:
+                    if proc in pslist["Image"]:
+                        while True:
+                            if proc not in temp["Image"]:
+                                break
+                            index = temp["Image"].index(proc)
+                            print(f"Idx : {index}, Process name : {proc}")
+                            temp["Image"].remove(proc)
+                            temp["PID"].pop(index)
+                            temp["PPID"].pop(index)
+                            temp["Offset"].pop(index)
+                            temp["Threads"].pop(index)
+                            temp["Handles"].pop(index)
+                            temp["SessionId"].pop(index)
+                            temp["Wow64"].pop(index)
+                            temp["CreateTime"].pop(index)
+                            temp["ExitTime"].pop(index)
+                            temp["FileOutPut"].pop(index)
+                
+                # dump semua process
+                for pid in temp["PID"]:
+                    vol2.run("windows.pslist.PsList", FILE_PATH, [None, pid, True])
         except Exception as e:
             print(f"[!] Error: {e}")
     else:

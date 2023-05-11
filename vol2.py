@@ -8,7 +8,7 @@ from volatility3.cli import CommandLine as cmd
 import volatility3
 from volatility3.cli import text_renderer, volargparse
 from volatility3.framework import interfaces
-import os
+import sys, os, json
 import volatility3.framework.constants
 import argparse, inspect
 from typing import Dict, Type, Union, Any
@@ -16,80 +16,7 @@ from urllib import parse, request
 from volatility3.framework.configuration import requirements
 # from tabulate import tabulate
  
-dictPslist = {
-    "PID" : [],
-    "PPID" : [],
-    "Image": [],
-    "Offset": [],
-    "Threads": [],
-    "Handles": [],
-    "SessionId": [],
-    "Wow64": [],
-    "CreateTime": [],
-    "ExitTime": [],
-    "FileOutPut": [],
-}
-
-dictNetscan = {
-    "Offset" : [],
-    "Proto" : [],
-    "LocalAddr" : [],
-    "LocalPort" : [],
-    "ForeignAddress" : [],
-    "ForeignPort" : [],
-    "State" : [],
-    "PID" : [],
-    "Owner" : [],
-    "Created" : []
-}
-
-dictCmdLine = {
-     "PID" : [],
-     "Process" : [],
-     "Args" : []
-}
-
-dictDLL = {
-     "PID" : [],
-     "Process Base" : [],
-     "Size" : [],
-     "Name" : [],
-     "Path" : [],
-     "Load Time" : [],
-     "File Output" : []
-}
-
-dictHandles = {
-     "PID" : [],
-     "Process Offset" : [],
-     "HandleValue" : [],
-     "Type" : [],
-     "GrantedAccess" : [],
-     "Name" : []
-}
-
-dictPsScan = {
-     "PID" : [],
-     "PPID" : [],
-     "ImageFileName" : [],
-     "Offset" : [],
-     "Threads" : [],
-     "Handles" : [],
-     "SessionId" : [],
-     "Wow64" : [],
-     "CreateTime" : [],
-     "ExitTime" : [],
-     "File output" : []
-}
-
-dictPrintKey = {
-     "Last Write" : [],
-     "Time Hive" : [],
-     "Offset" : [],
-     "Type" : [],
-     "Key" : [],
-     "Volatile" : []
-}
+VOLDATA = {}
 
 """
 {'windows.statistics.Statistics': <class 'volatility3.plugins.windows.statistics.Statistics'>, 
@@ -226,148 +153,32 @@ def populate_config(context: interfaces.context.ContextInterface,
                     context.config[extended_path] = value
 
 def renderersEx(grid: interfaces.renderers.TreeGrid, pluginName):
+    global VOLDATA
+
+    if VOLDATA:
+        VOLDATA.clear()
     
+    # get the key
+    for column in grid.columns:
+         VOLDATA[column.name] = []
+    
+    # visit node 
     def visitor(node: interfaces.renderers.TreeGrid, accumulator):
         objecttest = grid.values(node)
         index = 0
-        for key in dictNetscan.keys():
+        for key in VOLDATA.keys():
             if objecttest[index].__class__.__name__ == "NotApplicableValue":
-                dictNetscan[key].append("N/A")
-            else:
-                dictNetscan[key].append(objecttest[index])
-            index+=1
-        return None
-    
-    def visitor2(node: interfaces.renderers.TreeGrid, accumulator):
-        objecttest = grid.values(node)
-        
-        index = 0 
-        for key in dictPslist.keys():
-            if objecttest[index].__class__.__name__ == "NotApplicableValue":
-                dictPslist[key].append("N/A")
-            else:
-                dictPslist[key].append(objecttest[index])
-            index+=1
-
-        return None
-
-    def visitor3(node: interfaces.renderers.TreeGrid, accumulator):
-        objecttest = grid.values(node)
-        
-        index = 0 
-        for key in dictCmdLine.keys():
-            if objecttest[index].__class__.__name__ == "NotApplicableValue":
-                dictCmdLine[key].append("N/A")
-            else:
-                dictCmdLine[key].append(objecttest[index])
-            index+=1
-
-        return None
-    
-    def visitor4(node: interfaces.renderers.TreeGrid, accumulator):
-        objecttest = grid.values(node)
-        
-        index = 0 
-        for key in dictDLL.keys():
-            if objecttest[index].__class__.__name__ == "NotApplicableValue":
-                dictDLL[key].append("N/A")
-            else:
-                dictDLL[key].append(objecttest[index])
-            index+=1
-
-        return None
-
-    def visitor5(node: interfaces.renderers.TreeGrid, accumulator):
-        objecttest = grid.values(node)
-        
-        index = 0 
-        for key in dictHandles.keys():
-            if objecttest[index].__class__.__name__ == "NotApplicableValue":
-                dictHandles[key].append("N/A")
-            else:
-                dictHandles[key].append(objecttest[index])
-            index+=1
-
-        return None
-    
-    def visitor6(node: interfaces.renderers.TreeGrid, accumulator):
-        objecttest = grid.values(node)
-        
-        index = 0 
-        for key in dictPsScan.keys():
-            if objecttest[index].__class__.__name__ == "NotApplicableValue":
-                dictPsScan[key].append("N/A")
-            else:
-                dictPsScan[key].append(objecttest[index])
-            index+=1
-
-        return None
-    
-    def visitor7(node: interfaces.renderers.TreeGrid, accumulator):
-        objecttest = grid.values(node)
-        
-        index = 0 
-        for key in dictPrintKey.keys():
-            if objecttest[index].__class__.__name__ == "NotApplicableValue":
-                dictPrintKey[key].append("N/A") 
+                VOLDATA[key].append("N/A")
             elif objecttest[index].__class__.__name__ == "UnreadableValue" :
-                dictPrintKey[key].append("-")
+                VOLDATA[key].append("-")
             else:
-                dictPrintKey[key].append(objecttest[index])
+                VOLDATA[key].append(objecttest[index])
             index+=1
-
         return None
 
-        # if pluginName == "windows.pslist.PsList":    
-        #     for key in dictPslist.keys():
-        #         if objecttest[index].__class__.__name__ == "NotApplicableValue":
-        #             dictPslist[key].append("N/A")
-        #         else:
-        #             dictPslist[key].append(objecttest[index])
-        #         index+=1
-        # elif pluginName == "windows.netscan.NetScan":
-        #     for key in dictNetscan.keys():
-        #         if objecttest[index].__class__.__name__ == "NotApplicableValue":
-        #             dictNetscan[key].append("N/A")
-        #         else:
-        #             dictNetscan[key].append(objecttest[index])
-        #         index+=1
-        # print(pluginName)
-
-    if pluginName == "windows.netscan.NetScan":    
-        grid.populate(visitor)
-    elif pluginName == "windows.pslist.PsList":
-         grid.populate(visitor2)
-    elif pluginName == "windows.cmdline.CmdLine":
-        grid.populate(visitor3)
-    elif pluginName == "windows.dlllist.DllList":
-        grid.populate(visitor4)
-    elif pluginName == "windows.handles.Handles":
-        grid.populate(visitor5)
-    elif pluginName == "windows.psscan.PsScan":
-        grid.populate(visitor6)
-    elif pluginName == "windows.registry.printkey.PrintKey":
-        grid.populate(visitor7)
-
-
-# def renderersExTwo(grid: interfaces.renderers.TreeGrid):
-    
-    def visitor(node: interfaces.renderers.TreeGrid, accumulator):
-        objecttest = grid.values(node)
-        
-        index = 0 
-        for key in dictPslist.keys():
-            if objecttest[index].__class__.__name__ == "NotApplicableValue":
-                dictPslist[key].append("N/A")
-            else:
-                dictPslist[key].append(objecttest[index])
-            index+=1
-
-        return None
     grid.populate(visitor)
 
-
-def run(pluginName, filePath, argument):
+def run(pluginName, filePath, outputPath, argument):
     volatility3.framework.require_interface_version(2, 0, 0)
     renderers = dict(
                 [
@@ -375,7 +186,7 @@ def run(pluginName, filePath, argument):
                     for x in framework.class_subclasses(text_renderer.CLIRenderer)
                 ]
             )
-    render_mode = "quick"
+    # render_mode = "quick"
     parser = volargparse.HelpfulArgParser(add_help = False, prog = "volatility", description = "An open-source memory forensics framework")
     context = contexts.Context()
     failures = framework.import_files(
@@ -408,12 +219,13 @@ def run(pluginName, filePath, argument):
     # "windows.malfind.Malfind"
     args.plugin = pluginName
     # set output dir
-    args.output_dir = "./dumped/"
+    args.output_dir = outputPath
     # "wanncry.vmem"
     args.file = filePath
     if pluginName == "windows.netscan.NetScan":
         # [1340]
-        args.pid = [argument[0]]
+        if argument:
+            args.pid = [argument[0]]
     elif pluginName == "windows.pslist.PsList":
         if argument:
             args.physical = argument[0]
@@ -450,7 +262,7 @@ def run(pluginName, filePath, argument):
     plugin = plugin_list[args.plugin]
     chosen_configurables_list[args.plugin] = plugin
 
-    config_path = automagic.choose_automagic(automagics, plugin)
+    # config_path = automagic.choose_automagic(automagics, plugin)
 
     base_config_path = "plugins"
     plugin_config_path = interfaces.configuration.path_join(
@@ -479,20 +291,7 @@ def run(pluginName, filePath, argument):
     
     renderersEx(grid=treegrid, pluginName=pluginName)
     
-    if pluginName == "windows.netscan.NetScan":
-        return dictNetscan
-    elif pluginName == "windows.pslist.PsList":
-         return dictPslist
-    elif pluginName == "windows.cmdline.CmdLine":
-         return dictCmdLine
-    elif pluginName == "windows.dlllist.DllList":
-         return dictDLL
-    elif pluginName == "windows.handles.Handles":
-         return dictHandles
-    elif pluginName == "windows.psscan.PsScan":
-         return dictPsScan
-    elif pluginName == "windows.registry.printkey.PrintKey":
-         return dictPrintKey
+    return VOLDATA
 
 if __name__ == '__main__':
      run()
