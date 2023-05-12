@@ -10,7 +10,20 @@ FILE_PATH = "wanncry.vmem"
 REGISTRY_KEY = ["MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE", "CURRENTCONTROLSET\\CONTROL\\HIVELIST", "CONTROLSET002\\CONTROL\\SESSION MANAGER", "CURRENTCONTROLSET\\SERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICESONCE", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\NOTIFY", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\USERINIT", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\SHELL"]
 LEGAL_PROCNAME = ["System", "smss.exe", "csrss.exe", "wininit.exe", "services.exe", "svchost.exe", "lsass.exe", "winlogon.exe", "explorer.exe", "taskhostw.exe", "RuntimeBroker.exe"]
 IS_SPOOF = False
-OUTPUT_PATH = "./dumped/"
+IS_MALICIOUS = False
+OUTPUT_PATH = "./dumped"
+MALICIOUS_DATA = {
+    "ipv4" : [],
+    "pid" : [],
+    "hidden_pid" : [],
+    "process_name" : [],
+    "is_spoof" : False,
+    "cmdline" : [],
+    "handles" : [],
+    "dlllist" : [],
+    "registry" : [],
+    "exe_name" : []
+}
 
 def isValidIPv4(ip_str):
     # check apakah string berformat ipv4
@@ -37,9 +50,13 @@ def findAnchestor(pslist, pid):
     return anchestor
 
 def checksumVT(fileHash):
-    global IS_SPOOF
+    global IS_SPOOF, IS_MALICIOUS
+    
     clientAPIKey = "3e7b7c1801535998c249f13d8bfe6b5739ffbc1eaeb4ffe26341f46812d4041e"
     # clientAPIKey = "abea8b6da5856997aef0d511b155df9c541536d841c438693b2fb560486474a4"
+
+    IS_SPOOF = False
+    IS_MALICIOUS = False
     if clientAPIKey:
         try:
             print("\\-->[*] SHA256 SUM : " + fileHash)
@@ -74,6 +91,7 @@ def checksumVT(fileHash):
                 
                 if mal != 0:
                     IS_SPOOF = True
+                    IS_MALICIOUS = True
                     print("--- scanner malware classification ---")
                     print("//--> [*] Suggested threat label : " + str(json_resp['data']['attributes']['popular_threat_classification']['suggested_threat_label']))
                     threatCategory = list(json_resp['data']['attributes']['popular_threat_classification']['popular_threat_category'])
@@ -91,6 +109,7 @@ def checksumVT(fileHash):
     else:
         print('[!] Error : Invalid ClientAPIKey')
         sys.exit()
+    return IS_MALICIOUS
 
 def getFileHash(pathFile):
     try:
@@ -101,12 +120,6 @@ def getFileHash(pathFile):
     except FileNotFoundError as e:
         print(e)
         return ""
-
-def intToHex(listOfData):
-     lenOfData = len(listOfData)
-
-     for idx in range(lenOfData):
-        listOfData[idx] = hex(listOfData[idx]) 
 
 def addressCheck(address):
     try:
@@ -128,6 +141,13 @@ def addressCheck(address):
 def main():
     if os.path.isfile(FILE_PATH):
         try:
+            # check file path
+            print("[*] Checking output path. . .")
+            if not os.path.exists(OUTPUT_PATH):
+                print("[!] Folder path not found")
+                print(f"[*] Creating folder in path {OUTPUT_PATH}")
+                os.makedirs(OUTPUT_PATH)
+
             print("[+] Scanning the Network using Netscan")
             netscan = vol2.run("windows.netscan.NetScan", FILE_PATH, OUTPUT_PATH, [])
 
@@ -176,6 +196,7 @@ def main():
                     print("//--> [*] Timeout : " + str(timeoutInt) + " %")
 
                     if maliciousInt != 0:
+                        MALICIOUS_DATA["ipv4"].append(ip)
                         maliciousIp.append(ip)
                 
                 # ['83.212.99.68', '204.11.50.131', '94.130.200.167', '131.188.40.189']
@@ -202,7 +223,7 @@ def main():
                         index = netscan["PID"][idx]
                         maliciousPID.append(index)
                     
-                    print(f"malicious pid : {maliciousPID}")
+                    # print(f"malicious pid : {maliciousPID}")
                     # PID: [2092, 2092, 2092, 2092]
                     # print(f"PID: {maliciousPID}")
                     print("[+] Getting malicious PID")
@@ -276,6 +297,14 @@ def main():
                     # gabungan PID dari network hingga ancestor dan anakannya
                     maliciousList = ppidList + uniquePID
 
+                    # adding to dict
+                    # for pid in maliciousList:
+                    #     idx = pslist["PID"].index(pid)
+                    #     procname = pslist["ImageFileName"][idx]
+                    #     MALICIOUS_DATA["process_name"].append(procname)
+
+                    # print(pslist["PID"])
+                    
                     print("[+] Finding suspicious process that already exit")
 
                     psscan = vol2.run("windows.psscan.PsScan", FILE_PATH, OUTPUT_PATH, [])
@@ -287,6 +316,7 @@ def main():
                     for idx in range(lenPPIDList):
                         if scanPPID[idx] in maliciousList:
                             if scanPPID[idx] not in hiddenPIDScan:
+                                MALICIOUS_DATA["hidden_pid"].append(scanPPID[idx])
                                 hiddenPIDScan.append(scanPPID[idx])
                     
                     if hiddenPIDScan:
@@ -305,39 +335,30 @@ def main():
                         cmdline = vol2.run("windows.cmdline.CmdLine", FILE_PATH, OUTPUT_PATH, [malz])
                         # saved cmdline
                         listCMD.update(cmdline)
+                        MALICIOUS_DATA["cmdline"].append(cmdline["Args"])
                     
                     print("[+] Getting all DLL from malicious process. . .")
 
                     for malz in maliciousList:
                         dll = vol2.run("windows.dlllist.DllList", FILE_PATH, OUTPUT_PATH, [malz, False])
                         listDLL.update(dll)
-
-                    intToHex(listDLL["Size"])
-                    intToHex(listDLL["Base"])
-
-                    # print(listDLL)
+                        MALICIOUS_DATA["dlllist"].append(dll["Path"])
 
                     print("[+] Getting all handles from malicious process. . .")
 
+                    # tambahin handles ke malicious data nanti
                     for malz in maliciousList:
                         handles = vol2.run("windows.handles.Handles", FILE_PATH, OUTPUT_PATH, [malz])
                         listHanldes.update(handles)
                     
-                    # to hex : handles value, type, name
-                    intToHex(listHanldes["Offset"])
-                    intToHex(listHanldes["HandleValue"])
-                    intToHex(listHanldes["GrantedAccess"])
-
                     # Cek persistence mechanism
                     # Cek dilakukan dengan cara mengecek registry key
                     # Yang biasanya ditempati malware
                     # Ex : MICROSOFT\WINDOWS\CURRENTVERSION\RUN
                     print("[+] Checking registry. . .")
 
-
+                    # tambahin printkey ke malicious data nanti
                     printkey = vol2.run("windows.registry.printkey.PrintKey", FILE_PATH, OUTPUT_PATH, [REGISTRY_KEY[0]])
-                    intToHex(printkey["Hive Offset"])
-                    # print(printkey)
 
                     # dump process
                     print("[+] Start to dump the process")
@@ -351,16 +372,32 @@ def main():
                     # cek berapa banyak file
                     file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
                     print("[+] Checking file to virus total")
+
+                    pslist = vol2.run("windows.pslist.PsList", FILE_PATH, OUTPUT_PATH, [])
                     # ambil hash dan cek ke virus total
                     for file_name in os.listdir(folder_path):
                         file_path = os.path.join(folder_path, file_name)
                         if os.path.isfile(file_path):
-                            if file_count >= 5:
-                                sleep(15)
-                            file_hash = getFileHash(file_path)
-                            # cek ke vt
-                            print(f"\-->[*] File Name : {file_name} ")
-                            checksumVT(file_hash)
+                            for pid in maliciousList:
+                                pidstr = str(pid)
+                                # klo ada pid di file name
+                                if pidstr in file_name:
+                                    if file_count >= 5:
+                                        sleep(15)
+                                    if not file_name.startswith("."):
+                                        file_hash = getFileHash(file_path)
+                                        # cek ke vt
+                                        print(f"\-->[*] File Name : {file_name} ")
+                                        ismal = checksumVT(file_hash)
+                                        if ismal:
+                                            idx = pslist["PID"].index(pid)
+                                            procname = pslist["ImageFileName"][idx]
+                                            MALICIOUS_DATA["process_name"].append(procname)
+                                            MALICIOUS_DATA["pid"].append(pid)
+                                            MALICIOUS_DATA["exe_name"].append(file_name)
+                                    break
+                
+                print(MALICIOUS_DATA)
                 sys.exit()                           
             
             # Kalo gada filtered IP dan malicious ip

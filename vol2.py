@@ -178,6 +178,21 @@ def renderersEx(grid: interfaces.renderers.TreeGrid, pluginName):
 
     grid.populate(visitor)
 
+def byteToString(listOfData):
+     lenOfData = len(listOfData)
+
+     for idx in range(lenOfData):
+          data = listOfData[idx]
+          if isinstance(data, bytes):
+               strbyte = data.decode('utf-16')
+               listOfData[idx] = strbyte
+
+def intToHex(listOfData):
+     lenOfData = len(listOfData)
+
+     for idx in range(lenOfData):
+        listOfData[idx] = hex(listOfData[idx])
+
 def run(pluginName, filePath, outputPath, argument):
     volatility3.framework.require_interface_version(2, 0, 0)
     renderers = dict(
@@ -232,8 +247,9 @@ def run(pluginName, filePath, outputPath, argument):
             args.pid = [argument[1]]
             args.dump = argument[2]
     elif pluginName == "windows.pstree.PsTree":
-        args.physical = argument[0]
-        args.pid = argument[1]
+        if argument:
+            args.physical = argument[0]
+            args.pid = argument[1]
     elif pluginName == "windows.psscan.PsScan":
         if argument:
             args.physical = argument[0]
@@ -290,6 +306,14 @@ def run(pluginName, filePath, outputPath, argument):
     treegrid = constructed.run()
     
     renderersEx(grid=treegrid, pluginName=pluginName)
+
+    for key in VOLDATA.keys():
+        if key == "Size" or key == "Base" or key == "Offset" or key == "HandleValue" or key == "GrantedAccess" or key == "Hive Offset" or key == "Offset(V)":
+            intToHex(VOLDATA[key])
+        elif key == "Data":
+            byteToString(VOLDATA[key])
+        else:
+             continue
     
     return VOLDATA
 
