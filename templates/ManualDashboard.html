@@ -125,17 +125,17 @@
                     <select name="command" id="command" onchange="showInput()">
                         <option value="">Select a Command</option>
                         <option value="info">windows.info</option>
-                        <option value="pslist">windows.pslist</option>
-                        <option value="pstree">windows.pstree</option>
-                        <option value="psscan">windows.psscan</option>
+                        <option value="windows.pslist.PsList">windows.pslist</option>
+                        <option value="windows.pstree.PsTree">windows.pstree</option>
+                        <option value="windows.psscan.PsScan">windows.psscan</option>
                         <option value="netstat">windows.netstat</option>
-                        <option value="netscan">windows.netscan</option>
-                        <option value="dlllist">windows.dlllist</option>
-                        <option value="handles">windows.handles</option>
-                        <option value="printkey">windows.registry.printkey</option>
+                        <option value="windows.netscan.NetScan">windows.netscan</option>
+                        <option value="windows.dlllist.DllList">windows.dlllist</option>
+                        <option value="windows.handles.Handles">windows.handles</option>
+                        <option value="windows.registry.printkey.PrintKey">windows.registry.printkey</option>
                         <option value="filescan">windows.filescan</option>
-                        <option value="malfind">windows.malfind</option>
-                        <option value="cmdline">windows.cmdline</option>
+                        <option value="windows.malfind.Malfind">windows.malfind</option>
+                        <option value="windows.cmdline.CmdLine">windows.cmdline</option>
                     </select>
 
                     <button type="submit" value="Submit" name="submit"><i class="fa fa-code"></i></button>
@@ -196,7 +196,7 @@
             <table id="data-table" style="display: none;">
                 <thead>
                 </thead>
-                <tbody>
+                <tbody id="tableBody">
                 </tbody>
             </table>
         </div>
@@ -214,6 +214,7 @@
         crossorigin="anonymous"></script>
 
     <script type="text/javascript">
+        var dictionary = {};
         function showInput() {
             var pidField = document.getElementById("pid-field");
             var offsetField = document.getElementById("offset-field");
@@ -224,17 +225,17 @@
             var recurseCheck = document.getElementById("recurse");
             var command = document.getElementById("command").value;
 
-            if (command == "pslist" || command == "pstree" || command == "psscan" || command == "dlllist" || command == "handles" || command == "malfind" || command == "cmdline") {
+            if (command == "windows.pslist.PsList" || command == "windows.pstree.PsTree" || command == "windows.psscan.PsScan" || command == "windows.dlllist.DllList" || command == "windows.handles.Handles" || command == "windows.malfind.Malfind" || command == "windows.cmdline.CmdLine") {
                 pidField.style.display = "block";
             } else {
                 pidField.style.display = "none";
             }
-            if (command == "pslist" || command == "pstree" || command == "psscan") {
+            if (command == "windows.pslist.PsList" || command == "windows.pstree.PsTree" || command == "windows.psscan.PsScan") {
                 physicalField.style.display = "block";
             } else {
                 physicalField.style.display = "none";
             }
-            if (command == "printkey") {
+            if (command == "windows.registry.printkey.PrintKey") {
                 offsetField.style.display = "block";
                 keyField.style.display = "block";
                 recurseCheck.style.display = "block";
@@ -243,12 +244,12 @@
                 keyField.style.display = "none";
                 recurseCheck.style.display = "none";
             }
-            if (command == "netscan" || command == "netstat") {
+            if (command == "windows.netscan.NetScan" || command == "netstat") {
                 includeCorrupt.style.display = "block";
             } else {
                 includeCorrupt.style.display = "none";
             }
-            if (command == "pslist" || command == "psscan" || command == "dlllist" || command == "malfind") {
+            if (command == "windows.pslist.PsList" || command == "windows.psscan.PsScan" || command == "windows.dlllist.DllList" || command == "windows.malfind.Malfind") {
                 dumpCheck.style.display = "block";
             } else {
                 dumpCheck.style.display = "none";
@@ -278,6 +279,19 @@
             // Membuka file explorer
             input.click();
         }
+
+        function findIndeks(tempDict) {
+            var counter = 0;
+            for (var i = 0; i < tempDict.length; i++) {
+                // console.log(tempDict[i])
+                if (tempDict[i] == "PID") {
+                    counter = i;
+                    break;
+                }
+            };
+            return counter;
+        }
+
         document.getElementById("my-form").addEventListener("submit", function (event) {
             event.preventDefault();
             var pidValue = document.getElementById("pid-fieldvalue").value;
@@ -326,32 +340,55 @@
 
                     // });
                     var tableHeaderRow = table.insertRow();
-                    var headerKeys = ["Key", "Value"];
+                    var headerKeys = Object.keys(result);
                     for (var i = 0; i < headerKeys.length; i++) {
                         var headerCell = document.createElement("th");
                         headerCell.textContent = headerKeys[i];
                         tableHeaderRow.appendChild(headerCell);
                     }
-                    for (var key in result) {
-                        var row = table.insertRow();
-                        var cell1 = row.insertCell(0);
-                        var cell2 = row.insertCell(1);
-                        cell1.innerHTML = key;
-                        cell2.innerHTML = result[key];
-                        row.addEventListener("click", function () {
-                            var key = this.children[0].textContent;
-                            if(!this.classList.contains("clicked-row")){
-                                for (var i = 1; i < row.cells.length; i++) {
+
+                    var indekskey = findIndeks(headerKeys)
+                    console.log(indekskey)
+                    for (var j = 0; j < result["PID"].length; j++) {
+                        var tableBody = document.getElementById("tableBody");
+                        var dataRow = document.createElement("tr");
+                        for (var key in result) {
+                            var dataCell = document.createElement("td");
+                            var dataText = document.createTextNode(result[key][j]);
+                            dataCell.appendChild(dataText);
+                            dataRow.appendChild(dataCell);
+                        }
+                        var tempkey = dataRow.children[indekskey].textContent;
+                        if (dictionary.hasOwnProperty(tempkey)){
+                            dataRow.classList.add("clicked-row");
+                        }
+                        tableBody.appendChild(dataRow);
+                        dataRow.addEventListener("click", function () {
+
+                            var key = this.children[indekskey].textContent;
+                            if (dictionary.hasOwnProperty(key)) {
+                                this.classList.add("clicked-row");
+                            }
+                            if (!this.classList.contains("clicked-row")) {
+                                for (var i = 1; i < dataRow.cells.length; i++) {
                                     var value = this.cells[i].textContent;
                                     addToDictionary(key, value);
                                 }
+                                console.log(dictionary);
                                 this.classList.add("clicked-row");
-                            }else{
+                            } else {
                                 removeFromDictionary(key)
                                 this.classList.remove("clicked-row");
                             }
                         });
                     }
+                    // for (var key in result) {
+                    //     var row = table.insertRow();
+                    //     var cell1 = row.insertCell(0);
+                    //     var cell2 = row.insertCell(1);
+                    //     cell1.innerHTML = key;
+                    //     cell2.innerHTML = result[key];
+                    // }
                     // $('#result').html(html);
                 },
                 error: function (xhr, status, error) { // response gagal
@@ -387,7 +424,6 @@
 
         window.addEventListener("resize", shiftButton);
 
-        var dictionary = {};
 
         function addToDictionary(key, value) {
             if (key in dictionary) {
@@ -395,10 +431,9 @@
             } else {
                 dictionary[key] = [value]; // Membuat array baru dengan nilai sebagai elemen pertama
             }
-            console.log(dictionary);
         }
 
-        function removeFromDictionary(key){
+        function removeFromDictionary(key) {
             delete dictionary[key];
             console.log(dictionary);
         }
