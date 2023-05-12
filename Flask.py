@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, jsonify
+import vol2
 
 app = Flask(__name__)
-
 
 @app.route("/ManualDashboard", methods=["POST", "GET"])
 def manual():
@@ -45,17 +45,41 @@ def process_form():
     # if dump is None:
     #     dump = False
     form_data = request.form
+    command = ""
+    filePath = ""
+    pid = ""
+    offset = ""
+    keyRegis = ""
+    physical = ""
+    includeCorrupt = ""
+    recurse = ""
+    dump = ""
     
     data_dict = {}
     data_dict.clear()
     for key, value in form_data.items():
-        data_dict[key] = value
-        if key in data_dict and data_dict[key]:
-            pass
-        else:
-            del data_dict[key]
+        if key == "command":
+            command = value
+        elif key == "file-path":
+            filePath = value
+        elif key == "pid-fieldvalue":
+            pid = value
+        elif key == "offset-fieldvalue":
+            offset = value
+        elif key == "key-fieldvalue":
+            keyRegis = value
+        elif key == "physical-check":
+            physical = value
+        elif key == "include-corruptCheck":
+            includeCorrupt = value
+        elif key == "recurseCheck":
+            recurse = value
+        elif key == "dumpCheck":
+            dump = value
 
+    data_dict = vol2.run(command,"./wanncry.vmem","./outputtest",[])
     print(data_dict)
+    # print(data_dict)
     return jsonify(data_dict)
 
     # return jsonify({"command": command, "File Path": filePath, "PID": pid, "Offset": offset, "Key": key, "Include Corrupt": includeCorrupt, "Recurse": recurse, "Dump": dump,  "physic": physical})
