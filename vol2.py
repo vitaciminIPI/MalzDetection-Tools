@@ -8,12 +8,14 @@ from volatility3.cli import CommandLine as cmd
 import volatility3
 from volatility3.cli import text_renderer, volargparse
 from volatility3.framework import interfaces
-import sys, os, json
+import os
 import volatility3.framework.constants
 import argparse, inspect
+import binascii
 from typing import Dict, Type, Union, Any
 from urllib import parse, request
 from volatility3.framework.configuration import requirements
+from volatility3.cli import text_renderer
 # from tabulate import tabulate
  
 VOLDATA = {}
@@ -193,6 +195,33 @@ def intToHex(listOfData):
      for idx in range(lenOfData):
         listOfData[idx] = hex(listOfData[idx])
 
+def hexToAscii(dictOfData, key):
+    hex = dictOfData["Hexdump"]
+    strList = []
+
+    for h in hex:
+        bytes_data = bytes.fromhex(h)
+        strdata = ""
+        for byte in bytes_data:
+            if byte >= 32 and byte <= 126:
+                strdata += chr(byte)
+            else:
+                strdata += "."
+        
+        strList.append(strdata)
+
+    dictOfData[key] = strList
+
+def disasmToHex(dictOfData, key):
+    disasm = dictOfData["Disasm"]
+    data = []
+
+    for dis in disasm:
+        strdis = text_renderer.display_disassembly(dis)
+        data.append(strdis)
+    
+    dictOfData[key] = data
+
 def run(pluginName, filePath, outputPath, argument):
     volatility3.framework.require_interface_version(2, 0, 0)
     renderers = dict(
@@ -269,8 +298,9 @@ def run(pluginName, filePath, outputPath, argument):
             args.key = argument[0]
             # args.recurse = argument[2]
     elif pluginName == "windows.malfind.Malfind":
-        args.pid = argument[0]
-        args.dump = argument[1]
+        if argument:
+            args.pid = argument[0]
+            args.dump = argument[1]
     elif pluginName == "windows.cmdline.CmdLine":
         if argument:
             args.pid = [argument[0]]
@@ -312,6 +342,10 @@ def run(pluginName, filePath, outputPath, argument):
             intToHex(VOLDATA[key])
         elif key == "Data":
             byteToString(VOLDATA[key])
+        elif key == "Hexdump":
+             disasmToHex(VOLDATA, key)
+        elif key == "Disasm":
+             hexToAscii(VOLDATA, key)
         else:
              continue
     
