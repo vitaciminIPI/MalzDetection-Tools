@@ -15,14 +15,13 @@ OUTPUT_PATH = "./dumped"
 MALICIOUS_DATA = {
     "ipv4" : [],
     "pid" : [],
+    "sus_pid" : [],
     "hidden_pid" : [],
     "process_name" : [],
     "is_spoof" : False,
-    "cmdline" : [],
-    "handles" : [],
-    "dlllist" : [],
     "registry" : [],
-    "exe_name" : []
+    "exe_name" : [],
+    "malware_types" : []
 }
 
 def isValidIPv4(ip_str):
@@ -50,7 +49,7 @@ def findAnchestor(pslist, pid):
     return anchestor
 
 def checksumVT(fileHash):
-    global IS_SPOOF, IS_MALICIOUS
+    global IS_SPOOF, IS_MALICIOUS, MALICIOUS_DATA
     
     clientAPIKey = "3e7b7c1801535998c249f13d8bfe6b5739ffbc1eaeb4ffe26341f46812d4041e"
     # clientAPIKey = "abea8b6da5856997aef0d511b155df9c541536d841c438693b2fb560486474a4"
@@ -95,6 +94,7 @@ def checksumVT(fileHash):
                     print("--- scanner malware classification ---")
                     print("//--> [*] Suggested threat label : " + str(json_resp['data']['attributes']['popular_threat_classification']['suggested_threat_label']))
                     threatCategory = list(json_resp['data']['attributes']['popular_threat_classification']['popular_threat_category'])
+                    MALICIOUS_DATA["malware_types"].append(str(json_resp['data']['attributes']['popular_threat_classification']['suggested_threat_label']))
 
                     for category in threatCategory:
                         print("//--> [*] Category : " + category["value"])
@@ -296,12 +296,12 @@ def main():
                     
                     # gabungan PID dari network hingga ancestor dan anakannya
                     maliciousList = ppidList + uniquePID
+                    
+                    print(maliciousList)
 
                     # adding to dict
-                    # for pid in maliciousList:
-                    #     idx = pslist["PID"].index(pid)
-                    #     procname = pslist["ImageFileName"][idx]
-                    #     MALICIOUS_DATA["process_name"].append(procname)
+                    for pid in maliciousList:
+                        MALICIOUS_DATA["sus_pid"].append(pid)
 
                     # print(pslist["PID"])
                     
@@ -325,32 +325,52 @@ def main():
                     # print(maliciousList)
                     listCMD = {}
                     listDLL = {}
-                    listHanldes = {}
+                    listHandles = {}
                     print("[+] Getting all cmd arguments. . .")
 
                     # print(listCMD) [1340, 2464, 1340, 2340, 2464, 2464, 1340]
 
                     for malz in maliciousList:
+                        # print(malz)
                         # run cmd line
                         cmdline = vol2.run("windows.cmdline.CmdLine", FILE_PATH, OUTPUT_PATH, [malz])
-                        # saved cmdline
-                        listCMD.update(cmdline)
-                        MALICIOUS_DATA["cmdline"].append(cmdline["Args"])
+                        
+                        if not listCMD:
+                            # saved cmdline
+                            listCMD.update(cmdline)
+                        else:
+                            for key in listCMD.keys():
+                                if key in cmdline:
+                                    listCMD[key].append(cmdline[key][0])
+                        # MALICIOUS_DATA["cmdline"].append(cmdline["Args"])
                     
                     print("[+] Getting all DLL from malicious process. . .")
 
                     for malz in maliciousList:
                         dll = vol2.run("windows.dlllist.DllList", FILE_PATH, OUTPUT_PATH, [malz, False])
-                        listDLL.update(dll)
-                        MALICIOUS_DATA["dlllist"].append(dll["Path"])
+                        
+                        if not listDLL:
+                            listDLL.update(dll)
+                        else:
+                            for key in listDLL.keys():
+                                if key in dll:
+                                    listDLL[key].append(dll[key][0])
+
+                        # MALICIOUS_DATA["dlllist"].append(dll["Path"])
 
                     print("[+] Getting all handles from malicious process. . .")
 
                     # tambahin handles ke malicious data nanti
                     for malz in maliciousList:
                         handles = vol2.run("windows.handles.Handles", FILE_PATH, OUTPUT_PATH, [malz])
-                        listHanldes.update(handles)
-                    
+
+                        if not listHandles:
+                            listHandles.update(handles)
+                        else:
+                            for key in listHandles.keys():
+                                if key in handles:
+                                    listHandles[key].append(handles[key][0])
+
                     # Cek persistence mechanism
                     # Cek dilakukan dengan cara mengecek registry key
                     # Yang biasanya ditempati malware
@@ -358,7 +378,15 @@ def main():
                     print("[+] Checking registry. . .")
 
                     # tambahin printkey ke malicious data nanti
-                    printkey = vol2.run("windows.registry.printkey.PrintKey", FILE_PATH, OUTPUT_PATH, [REGISTRY_KEY[0]])
+                    for reg in REGISTRY_KEY:
+                        printkey = vol2.run("windows.registry.printkey.PrintKey", FILE_PATH, OUTPUT_PATH, [reg])
+
+                        typeLen = len(printkey["Type"])
+
+                        for i in range(typeLen):
+                            if printkey["Type"][i] != "Key":
+                                sublist = [printkey[key][i] for key in printkey.keys()]
+                                MALICIOUS_DATA["registry"].append(sublist)
 
                     # dump process
                     print("[+] Start to dump the process")
@@ -398,8 +426,22 @@ def main():
                                     break
                 
                 print(MALICIOUS_DATA)
+
                 sys.exit()                           
             
+
+            """
+
+
+
+            
+                KALO MISALKAN TIDAK ADA YANG MENCURIGAKAN DI IP
+
+            
+
+
+            """
+
             # Kalo gada filtered IP dan malicious ip
             # else:
             pslist = vol2.run("windows.pslist.PsList", FILE_PATH, [])
@@ -408,6 +450,7 @@ def main():
             indcs = []
             anchestorindcs = []
             pidlist = pslist["PID"]
+            malsPid = []
 
             # iterate image name
             for idx, element in enumerate(procList):
@@ -424,6 +467,7 @@ def main():
                 sys.exit()
             # klo ada duplikat process name
             else:
+                MALICIOUS_DATA["sus_pid"].append(dup)
                 anchestorindcs = indcs
                 pidOfSpoof = []
                 for i, dups in enumerate(dup):
@@ -469,12 +513,12 @@ def main():
                 print(f"idx spoof : {pidOfSpoof}")
                 
                 # cek k vt apakah beneran spoof
+                folder_path = "./dumped/"
                 for pid in pidOfSpoof:
                     print(f"Dumping pid {pid}")
-                    vol2.run("windows.pslist.PsList", FILE_PATH, [None, pid, True])
+                    vol2.run("windows.pslist.PsList", FILE_PATH, OUTPUT_PATH, [None, pid, True])
 
                 # iterate isi directory
-                folder_path = "./dumped/"
                 # cek berapa banyak file
                 file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
                 print("[+] Checking file to virus total")
@@ -482,18 +526,24 @@ def main():
                 for file_name in os.listdir(folder_path):
                     file_path = os.path.join(folder_path, file_name)
                     if os.path.isfile(file_path):
-                        if file_count >= 5:
-                            sleep(15)
-                        # bukan hidden file
-                        if not file_name.startswith("."):
-                            file_hash = getFileHash(file_path)
-                            # cek ke vt
-                            print(f"\-->[*] File Name : {file_name} ")
-                            checksumVT(file_hash)                        
+                        for pid in pidOfSpoof:
+                            pidstr = str(pid)
+                            if file_count >= 5:
+                                sleep(15)
+                            # bukan hidden file
+                            if not file_name.startswith("."):
+                                file_hash = getFileHash(file_path)
+                                # cek ke vt
+                                print(f"\-->[*] File Name : {file_name} ")
+                                ismals = checksumVT(file_hash)
+                                if ismals:
+                                    malsPid.append(pid)
+                                    MALICIOUS_DATA["pid"].append()                        
 
             # klo ada spoof
-            if IS_SPOOF:
-                for pid in pidOfSpoof:
+            # lanjut benerin ntr
+            if malsPid:
+                for pid in malsPid:
                     print("Getting commandline")
                     cmdline = vol2.run("windows.cmdline.CmdLine", FILE_PATH, [pid])
                     print("Getting dll") 
@@ -502,7 +552,7 @@ def main():
                     handles = vol2.run("windows.handles.Handles", FILE_PATH, [pid])
                     print("Checking registry")
                     printkey = vol2.run("windows.registry.printkey.PrintKey", FILE_PATH, [REGISTRY_KEY[0]])
-
+                sys.exit()
             # klo gada spoof
             # pisahin legitimate process
             # dump sisanya
