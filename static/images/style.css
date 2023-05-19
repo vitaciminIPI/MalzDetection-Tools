@@ -33,7 +33,7 @@ a:focus {
 
 .btn {
     position: fixed;
-    top: 10%;    
+    top: 10%;
     transform: translateY(-50%);
     left: 260px;
     z-index: 1;
@@ -53,6 +53,7 @@ a:focus {
 
 .wrapper {
     display: flex;
+    position: relative;
     width: 100%;
     align-items: stretch;
 }
@@ -64,7 +65,8 @@ a:focus {
     color: #fff;
     transition: all 0.3s;
     position: fixed;
-    height: 100vh;
+    height: 100%;
+    overflow-y: auto;
 }
 
 #sidebar.active {
@@ -133,7 +135,9 @@ ul.CTAs a {
     min-height: 100vh;
     transition: all 0.3s;
     height: auto;
-    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("background.jpg");
+    margin-left: 300px;
+    /* position: absolute; */
+    /* background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("background.jpg"); */
 }
 
 /* ---------------------------------------------------
