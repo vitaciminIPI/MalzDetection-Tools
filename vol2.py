@@ -2,7 +2,7 @@ from volatility3.framework import contexts
 from volatility3.framework import automagic
 from volatility3 import framework
 from volatility3.framework import interfaces
-from volatility3.cli import PrintedProgress, MuteProgress
+from volatility3.cli import MuteProgress
 from volatility3.framework import plugins
 from volatility3.cli import CommandLine as cmd
 import volatility3
@@ -10,10 +10,7 @@ from volatility3.cli import text_renderer, volargparse
 from volatility3.framework import interfaces
 import os
 import volatility3.framework.constants
-import argparse, inspect
-import binascii
-from typing import Dict, Type, Union, Any
-from urllib import parse, request
+from urllib import request
 from volatility3.framework.configuration import requirements
 from volatility3.cli import text_renderer
 # from tabulate import tabulate
@@ -72,87 +69,6 @@ VOLDATA = {}
 'windows.malfind.Malfind': <class 'volatility3.plugins.windows.malfind.Malfind'>, 
 'windows.registry.userassist.UserAssist': <class 'volatility3.plugins.windows.registry.userassist.UserAssist'>}
 """
-
-def populate_requirements_argparse(parser: Union[argparse.ArgumentParser, argparse._ArgumentGroup],
-                                       configurable: Type[interfaces.configuration.ConfigurableInterface]):
-        """Adds the plugin's simple requirements to the provided parser.
-
-        Args:
-            parser: The parser to add the plugin's (simple) requirements to
-            configurable: The plugin object to pull the requirements from
-        """
-        if not issubclass(configurable, interfaces.configuration.ConfigurableInterface):
-            raise TypeError("Expected ConfigurableInterface type, not: {}".format(type(configurable)))
-
-        # Construct an argparse group
-
-        for requirement in configurable.get_requirements():
-            additional = {}  # type: Dict[str, Any]
-            if not isinstance(requirement, interfaces.configuration.RequirementInterface):
-                raise TypeError("Plugin contains requirements that are not RequirementInterfaces: {}".format(
-                    configurable.__name__))
-            if isinstance(requirement, interfaces.configuration.SimpleTypeRequirement):
-                additional["type"] = requirement.instance_type
-                if isinstance(requirement, requirements.IntRequirement):
-                    additional["type"] = lambda x: int(x, 0)
-                if isinstance(requirement, requirements.BooleanRequirement):
-                    additional["action"] = "store_true"
-                    if "type" in additional:
-                        del additional["type"]
-            elif isinstance(requirement, volatility3.framework.configuration.requirements.ListRequirement):
-                additional["type"] = requirement.element_type
-                nargs = '*' if requirement.optional else '+'
-                additional["nargs"] = nargs
-            elif isinstance(requirement, volatility3.framework.configuration.requirements.ChoiceRequirement):
-                additional["type"] = str
-                additional["choices"] = requirement.choices
-            else:
-                continue
-            parser.add_argument("--" + requirement.name.replace('_', '-'),
-                                help = requirement.description,
-                                default = requirement.default,
-                                dest = requirement.name,
-                                required = not requirement.optional,
-                                **additional)
-
-def populate_config(context: interfaces.context.ContextInterface,
-                        configurables_list: Dict[str, Type[interfaces.configuration.ConfigurableInterface]],
-                        args: argparse.Namespace, plugin_config_path: str) -> None:
-        """Populate the context config based on the returned args.
-
-        We have already determined these elements must be descended from ConfigurableInterface
-
-        Args:
-            context: The volatility3 context to operate on
-            configurables_list: A dictionary of configurable items that can be configured on the plugin
-            args: An object containing the arguments necessary
-            plugin_config_path: The path within the context's config containing the plugin's configuration
-        """
-        vargs = vars(args)
-        for configurable in configurables_list:
-            for requirement in configurables_list[configurable].get_requirements():
-                value = vargs.get(requirement.name, None)
-                if value is not None:
-                    if isinstance(requirement, requirements.URIRequirement):
-                        if isinstance(value, str):
-                            scheme = parse.urlparse(value).scheme
-                            if not scheme or len(scheme) <= 1:
-                                if not os.path.exists(value):
-                                    raise FileNotFoundError(
-                                        "Non-existant file {} passed to URIRequirement".format(value))
-                                value = "file://" + request.pathname2url(os.path.abspath(value))
-                    if isinstance(requirement, requirements.ListRequirement):
-                        if not isinstance(value, list):
-                            raise TypeError("Configuration for ListRequirement was not a list: {}".format(
-                                requirement.name))
-                        value = [requirement.element_type(x) for x in value]
-                    if not inspect.isclass(configurables_list[configurable]):
-                        config_path = configurables_list[configurable].config_path
-                    else:
-                        # We must be the plugin, so name it appropriately:
-                        config_path = plugin_config_path
-                    extended_path = interfaces.configuration.path_join(config_path, requirement.name)
-                    context.config[extended_path] = value
 
 def renderersEx(grid: interfaces.renderers.TreeGrid, pluginName):
     global VOLDATA
@@ -241,6 +157,8 @@ def run(pluginName, filePath, outputPath, argument):
     plugin_list = framework.list_plugins()
     seen_automagics = set()
     chosen_configurables_list = {}
+    cmds = cmd()
+
     for amagic in automagics:
                 chosen_configurables_list[amagic.__class__.__name__] = amagic
     for amagic in automagics:
@@ -248,7 +166,7 @@ def run(pluginName, filePath, outputPath, argument):
                     continue
                 seen_automagics.add(amagic)
                 if isinstance(amagic, interfaces.configuration.ConfigurableInterface):
-                    populate_requirements_argparse(parser, amagic.__class__)
+                    cmd.populate_requirements_argparse(cmds, parser, amagic.__class__)
 
     subparser = parser.add_subparsers(title = "Plugins",
                                             dest = "plugin",
@@ -257,7 +175,8 @@ def run(pluginName, filePath, outputPath, argument):
                                             action = volargparse.HelpfulSubparserAction)
     for plugin in sorted(plugin_list):
                 plugin_parser = subparser.add_parser(plugin, help = plugin_list[plugin].__doc__)
-                populate_requirements_argparse(plugin_parser, plugin_list[plugin])
+                cmd.populate_requirements_argparse(cmds, plugin_parser, plugin_list[plugin])
+    
     args = parser.parse_args()
     
     # "windows.malfind.Malfind"
@@ -314,8 +233,6 @@ def run(pluginName, filePath, outputPath, argument):
     plugin_config_path = interfaces.configuration.path_join(
                 base_config_path, plugin.__name__
             )
-    
-    cmds = cmd()
 
     # set output dir
     cmds.output_dir = args.output_dir
@@ -330,7 +247,7 @@ def run(pluginName, filePath, outputPath, argument):
     for amagic in automagics:
         chosen_configurables_list[amagic.__class__.__name__] = amagic
 
-    populate_config(context, chosen_configurables_list, args, plugin_config_path)
+    cmd.populate_config(cmds, context, chosen_configurables_list, args, plugin_config_path)
     progress_callback = MuteProgress()
     constructed = plugins.construct_plugin(context, automagics, plugin, base_config_path, progress_callback, cmds.file_handler_class_factory())
     treegrid = constructed.run()
