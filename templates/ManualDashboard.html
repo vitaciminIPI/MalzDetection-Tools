@@ -73,6 +73,11 @@
             background-color: #ff4d4d;
             /* Warna latar belakang untuk baris yang sudah diklik */
         }
+
+        .bt-generate {
+            position: absolute;
+            right: 0;
+        }
     </style>
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -108,6 +113,13 @@
                             Framework
                             3.0</h5>
                     </li>
+                    <li class="">
+                        <form action="#">
+                            <button class="mt-1 bt-generate me-2" type="submit" onclick="notifSuccess()"><i
+                                    class='fas fa-file-alt'></i>
+                                Generate Report</button>
+                        </form>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -117,10 +129,12 @@
         <nav id="sidebar">
 
             <ul class="list-unstyled components">
-                <form name="my-form" id="my-form" action="#" method="post">
+                <form id="form1" method="post" enctype="multipart/form-data">
+                    <!-- Form pertama -->
                     <label for="file-path" style="margin-top: 20px;">Browse Image:</label><br>
-                    <input type="text" name="file-path" id="file-path" onclick="openFileExplorer()"><span
-                        style="margin-left: 10px;"><i class='fas fa-file'></i></span>
+                    <input type="file" name="file" onchange="submitform()">
+                </form>
+                <form name="my-form" id="my-form" action="#" method="post">
                     <label style="margin-top: 20px; margin-bottom: 0;" for="command">Command:</label>
                     <select name="command" id="command" onchange="showInput()">
                         <option value="">Select a Command</option>
@@ -280,20 +294,28 @@
             input.click();
         }
 
-        function findIndeks(tempDict) {
+        function findIndeks(tempDict, command) {
             var counter = 0;
             for (var i = 0; i < tempDict.length; i++) {
                 // console.log(tempDict[i])
                 if (tempDict[i] == "PID") {
                     counter = i;
                     break;
+                } else if (tempDict[i] == "Name" && command == "windows.registry.printkey.PrintKey") {
+                    counter = i;
+                    break;
                 }
             };
             return counter;
         }
+        
+        function submitform(){
+            $('#form1').submit();
+        }
 
         document.getElementById("my-form").addEventListener("submit", function (event) {
             event.preventDefault();
+            $('#form1').submit();
             var pidValue = document.getElementById("pid-fieldvalue").value;
             var offsetValue = document.getElementById("offset-fieldvalue").value;
             var keyValue = document.getElementById("key-fieldvalue").value;
@@ -318,7 +340,7 @@
                 document.getElementById("physical-check").value = "false"
             }
             var command = document.getElementById("command").value;
-            var filePath = document.getElementById("file-path").value;
+            // var filePath = document.getElementById("file-path").value;
             var table = document.getElementById("data-table");
             table.style.display = "block";
             var tbody = table.getElementsByTagName("tbody")[0];
@@ -339,6 +361,7 @@
                     // $.each(result, function (key, value) {
 
                     // });
+                    console.log(result)
                     var tableHeaderRow = table.insertRow();
                     var headerKeys = Object.keys(result);
                     for (var i = 0; i < headerKeys.length; i++) {
@@ -347,40 +370,75 @@
                         tableHeaderRow.appendChild(headerCell);
                     }
 
-                    var indekskey = findIndeks(headerKeys)
+                    var indekskey = findIndeks(headerKeys, command)
                     console.log(indekskey)
-                    for (var j = 0; j < result["PID"].length; j++) {
-                        var tableBody = document.getElementById("tableBody");
-                        var dataRow = document.createElement("tr");
-                        for (var key in result) {
-                            var dataCell = document.createElement("td");
-                            var dataText = document.createTextNode(result[key][j]);
-                            dataCell.appendChild(dataText);
-                            dataRow.appendChild(dataCell);
-                        }
-                        var tempkey = dataRow.children[indekskey].textContent;
-                        if (dictionary.hasOwnProperty(tempkey)){
-                            dataRow.classList.add("clicked-row");
-                        }
-                        tableBody.appendChild(dataRow);
-                        dataRow.addEventListener("click", function () {
-
-                            var key = this.children[indekskey].textContent;
-                            if (dictionary.hasOwnProperty(key)) {
-                                this.classList.add("clicked-row");
+                    if (command == "windows.registry.printkey.PrintKey") {
+                        for (var j = 0; j < result["Key"].length; j++) {
+                            var tableBody = document.getElementById("tableBody");
+                            var dataRow = document.createElement("tr");
+                            for (var key in result) {
+                                var dataCell = document.createElement("td");
+                                var dataText = document.createTextNode(result[key][j]);
+                                dataCell.appendChild(dataText);
+                                dataRow.appendChild(dataCell);
                             }
-                            if (!this.classList.contains("clicked-row")) {
-                                for (var i = 1; i < dataRow.cells.length; i++) {
-                                    var value = this.cells[i].textContent;
-                                    addToDictionary(key, value);
+                            var tempkey = dataRow.children[indekskey].textContent;
+                            if (dictionary.hasOwnProperty(tempkey)) {
+                                dataRow.classList.add("clicked-row");
+                            }
+                            tableBody.appendChild(dataRow);
+                            dataRow.addEventListener("click", function () {
+                                var key = this.children[indekskey].textContent;
+                                if (dictionary.hasOwnProperty(key)) {
+                                    this.classList.add("clicked-row");
                                 }
-                                console.log(dictionary);
-                                this.classList.add("clicked-row");
-                            } else {
-                                removeFromDictionary(key)
-                                this.classList.remove("clicked-row");
+                                if (!this.classList.contains("clicked-row")) {
+                                    for (var i = 1; i < dataRow.cells.length; i++) {
+                                        var value = this.cells[i].textContent;
+                                        addToDictionary(key, value);
+                                    }
+                                    console.log(dictionary);
+                                    this.classList.add("clicked-row");
+                                } else {
+                                    removeFromDictionary(key)
+                                    this.classList.remove("clicked-row");
+                                }
+                            });
+
+                        }
+                    } else {
+                        for (var j = 0; j < result["PID"].length; j++) {
+                            var tableBody = document.getElementById("tableBody");
+                            var dataRow = document.createElement("tr");
+                            for (var key in result) {
+                                var dataCell = document.createElement("td");
+                                var dataText = document.createTextNode(result[key][j]);
+                                dataCell.appendChild(dataText);
+                                dataRow.appendChild(dataCell);
                             }
-                        });
+                            var tempkey = dataRow.children[indekskey].textContent;
+                            if (dictionary.hasOwnProperty(tempkey)) {
+                                dataRow.classList.add("clicked-row");
+                            }
+                            tableBody.appendChild(dataRow);
+                            dataRow.addEventListener("click", function () {
+                                var key = this.children[indekskey].textContent;
+                                if (dictionary.hasOwnProperty(key)) {
+                                    this.classList.add("clicked-row");
+                                }
+                                if (!this.classList.contains("clicked-row")) {
+                                    for (var i = 1; i < dataRow.cells.length; i++) {
+                                        var value = this.cells[i].textContent;
+                                        addToDictionary(key, value);
+                                    }
+                                    console.log(dictionary);
+                                    this.classList.add("clicked-row");
+                                } else {
+                                    removeFromDictionary(key)
+                                    this.classList.remove("clicked-row");
+                                }
+                            });
+                        }
                     }
                     // for (var key in result) {
                     //     var row = table.insertRow();
@@ -438,15 +496,23 @@
             console.log(dictionary);
         }
 
+        var filepath = "{{ file_path }}" + "/static/reports";
+        function notifSuccess() {
+            event.preventDefault()
+            $.ajax({
+                type: "POST", // method request
+                url: "/generate_report", // url request
+                data: $('form').serialize(), // data yang dikirimkan
+                success: function (result) { // response sukses
+                    alert('File berhasil diunduh pada ' + filepath);
+                },
+                error: function (xhr, status, error) { // response gagal
+                    console.log(xhr.responseText); // menampilkan pesan error di console log
+                }
+            });
+        }
     </script>
 </body>
 
 
 </html>
-<!-- @app.route('/process-form', methods=['POST'])
-def process_form():
-    command = request.form.get("physical-check")
-    if command == 'true':
-        return jsonify({"message": "true"})       
-    else:
-        return jsonify({"message": "false"}) -->

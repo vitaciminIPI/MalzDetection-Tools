@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoVolt Manual</title>
+    <title>AutoVolt Auto</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <style>
@@ -66,15 +66,16 @@
             width: 10em;
             font-size: 1.5em;
             color: black;
-			background-color: white;
-			border: none;
-			cursor: pointer;
+            background-color: grey;
+            border: none;
+            cursor: pointer;
         }
     </style>
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <!-- Our Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="../static/style.css">
     <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
 
     <!-- Font Awesome JS -->
@@ -113,8 +114,12 @@
         <nav id="sidebar">
 
             <ul class="list-unstyled components">
-                <h4 class="mt-3 mx-2" name="my-form" id="my-form">We will analyze the memory file without wasting your
-                    time</h4>
+                <form name="my-form" id="my-form" action="#" method="post">
+                    <h4 class="mx-1 my-3">We will analyze the memory file without wasting your time</h4>
+                    <label for="file-path" style="margin-top: 20px;">Browse Image:</label><br>
+                    <input type="text" name="file-path" id="file-path" onclick="openFileExplorer()"><span
+                        style="margin-left: 10px;"><i class='fas fa-file'></i></span>
+                </form>
                 <!-- <form name="my-form" id="my-form" action="#" method="post">
                 </form> -->
             </ul>
@@ -187,6 +192,30 @@
             } else {
                 dumpCheck.style.display = "none";
             }
+        }
+        function openFileExplorer() {
+            // Membuat elemen input untuk memilih file
+            var input = document.createElement('input');
+            input.type = 'file';
+
+            // Menambahkan event listener untuk mendapatkan path file yang dipilih
+            input.onchange = function (event) {
+                var file = event.target.files[0];
+
+                // Memeriksa apakah file yang dipilih valid
+                if (file) {
+                    // Mengambil nilai 'name' dari file yang dipilih
+                    var path = file.name;
+
+                    // Mengubah value dari input text dengan id 'file' menjadi path file yang dipilih
+                    document.getElementById('file-path').value = path;
+                } else {
+                    console.log('Tidak ada file yang dipilih.');
+                }
+            };
+
+            // Membuka file explorer
+            input.click();
         }
         document.getElementById("my-form").addEventListener("submit", function (event) {
             event.preventDefault();
