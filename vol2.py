@@ -2,7 +2,7 @@ from volatility3.framework import contexts
 from volatility3.framework import automagic
 from volatility3 import framework
 from volatility3.framework import interfaces
-from volatility3.cli import MuteProgress
+from volatility3.cli import PrintedProgress, MuteProgress
 from volatility3.framework import plugins
 from volatility3.cli import CommandLine as cmd
 import volatility3
@@ -10,7 +10,9 @@ from volatility3.cli import text_renderer, volargparse
 from volatility3.framework import interfaces
 import os
 import volatility3.framework.constants
-from urllib import request
+import argparse, inspect
+from typing import Dict, Type, Union, Any
+from urllib import parse, request
 from volatility3.framework.configuration import requirements
 from volatility3.cli import text_renderer
 # from tabulate import tabulate
@@ -111,23 +113,6 @@ def intToHex(listOfData):
      for idx in range(lenOfData):
         listOfData[idx] = hex(listOfData[idx])
 
-def hexToAscii(dictOfData, key):
-    hex = dictOfData["Hexdump"]
-    strList = []
-
-    for h in hex:
-        bytes_data = bytes.fromhex(h)
-        strdata = ""
-        for byte in bytes_data:
-            if byte >= 32 and byte <= 126:
-                strdata += chr(byte)
-            else:
-                strdata += "."
-        
-        strList.append(strdata)
-
-    dictOfData[key] = strList
-
 def disasmToHex(dictOfData, key):
     disasm = dictOfData["Disasm"]
     data = []
@@ -137,6 +122,19 @@ def disasmToHex(dictOfData, key):
         data.append(strdis)
     
     dictOfData[key] = data
+
+def hexDumpBytes(dictOfData, key):
+    hexaData = dictOfData['Hexdump']
+    
+    readableChar = []
+
+    for h in hexaData:
+        strtemp = ""
+        strdata = text_renderer.hex_bytes_as_text(h)
+        strtemp += strdata
+        readableChar.append(strtemp)
+    
+    dictOfData[key] = readableChar
 
 def run(pluginName, filePath, outputPath, argument):
     volatility3.framework.require_interface_version(2, 0, 0)
@@ -153,12 +151,11 @@ def run(pluginName, filePath, outputPath, argument):
                 volatility3.plugins, True
             )
     automagics = automagic.available(context)
+    cmds = cmd()
     # plugin list harus setelah automagic supaya ada list pluginnya
     plugin_list = framework.list_plugins()
     seen_automagics = set()
     chosen_configurables_list = {}
-    cmds = cmd()
-
     for amagic in automagics:
                 chosen_configurables_list[amagic.__class__.__name__] = amagic
     for amagic in automagics:
@@ -255,17 +252,17 @@ def run(pluginName, filePath, outputPath, argument):
     renderersEx(grid=treegrid, pluginName=pluginName)
 
     for key in VOLDATA.keys():
-        if key == "Size" or key == "Base" or key == "Offset" or key == "HandleValue" or key == "GrantedAccess" or key == "Hive Offset" or key == "Offset(V)":
+        if key == "Size" or key == "Base" or key == "Offset" or key == "HandleValue" or key == "GrantedAccess" or key == "Hive Offset" or key == "Offset(V)" or key == "Start VPN" or key == "End VPN":
             intToHex(VOLDATA[key])
         elif key == "Data":
             byteToString(VOLDATA[key])
         elif key == "Hexdump":
-             disasmToHex(VOLDATA, key)
+             hexDumpBytes(VOLDATA, key)
         elif key == "Disasm":
-             hexToAscii(VOLDATA, key)
+             disasmToHex(VOLDATA, key)
         else:
              continue
-    
+
     return VOLDATA
 
 if __name__ == '__main__':
