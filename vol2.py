@@ -111,7 +111,11 @@ def intToHex(listOfData):
      lenOfData = len(listOfData)
 
      for idx in range(lenOfData):
-        listOfData[idx] = hex(listOfData[idx])
+        numb = listOfData[idx]
+        if isinstance(numb, int):
+            listOfData[idx] = hex(listOfData[idx])
+        else:
+             listOfData[idx] = "N/A"
 
 def disasmToHex(dictOfData, key):
     disasm = dictOfData["Disasm"]
@@ -186,6 +190,9 @@ def run(pluginName, filePath, outputPath, argument):
         # [1340]
         if argument:
             args.pid = [argument[0]]
+    elif pluginName == "windows.modules.Modules":
+         if argument:
+              args.dump = argument[0]
     elif pluginName == "windows.pslist.PsList":
         if argument:
             args.physical = argument[0]
