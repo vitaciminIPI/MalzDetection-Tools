@@ -134,8 +134,9 @@ def process_form():
 
     data_dict = vol2.run(command, filePath, "./outputtest", [])
     # data_dict = vol2.run("windows.psscan.PsScan","./wanncry.vmem","./outputtest",[])
-    print("File: "+filePath)
-    # print(data_dict)
+    # print("File: "+filePath)
+    print(command)
+    print(data_dict)
     return jsonify(data_dict)
 
     # "File: "+ return jsonify({"command": command, "File Path": filePath, "PID": pid, "Offset": offset, "Key": key, "Include Corrupt": includeCorrupt, "Recurse": recurse, "Dump": dump,  "physic": physical})
