@@ -1,8 +1,7 @@
-from flask import Flask, render_template, request, jsonify, render_template, send_from_directory, send_file, session, make_response
+from flask import Flask, render_template, request, jsonify, render_template, send_file, session, make_response, Markup
 import os
-import urllib.parse
 from datetime import datetime
-import vol2
+import vol2, malzclass
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -33,11 +32,17 @@ def index():
 
 @app.route("/AutoDashboard", methods=["POST", "GET"])
 def auto():
+    file_path = os.path.abspath(__file__).replace('\\', '/')
     if request.method == "POST":
-        command = request.form["command"]
-        return render_template("AutoDashboard.html", command_input=f"command: {command}")
+        file = request.files['file']
+        file_name = os.path.abspath(file.filename)
+        upload_directory = os.path.join(app.root_path)
+        file_path = os.path.join(upload_directory, file_name)
+        file.save(file_path)
+        session["filePath"] = file_path
+        return make_response('', 204)
     else:
-        return render_template("AutoDashboard.html")
+        return render_template("AutoDashboard.html", file_path=file_path)
 
 
 @app.route('/generate_report', methods=['POST'])
@@ -76,6 +81,51 @@ def generate_report():
     return send_file(report_path, as_attachment=False)
 
 
+@app.route('/processAuto', methods=['POST'])
+def process_formAuto():
+    autoDict = {}
+    autoDict.clear()
+    malware = request.form.get('malware')
+    filePath = session.get('filePath')
+    if malware == "wannacry":
+        t = malzclass.WannaCry(filepath=filePath, outputpath="./outputtest")
+        autoDict = t.run()
+    elif malware == "emotet":
+        pass
+    elif malware == "stuxnet":
+        pass
+    print(autoDict)
+    html_content = generate_html(autoDict)
+    tanggal_waktu_sekarang = datetime.now()
+    deretan_angka = tanggal_waktu_sekarang.strftime('%Y%m%d_%H%M%S')
+    # Menyimpan file HTML di folder /static/reports
+    filename = "data_" + deretan_angka + ".html"
+    save_path = os.path.join(app.static_folder, 'reports')
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    file_path = os.path.join(save_path, filename)
+
+    with open(file_path, 'w') as file:
+        file.write(html_content)
+
+    # Mengirimkan file HTML yang akan diunduh
+    response = make_response(html_content)
+    response.headers['Content-Disposition'] = 'attachment; filename=data.html'
+    response.headers['Content-type'] = 'text/html'
+
+    return response
+
+def generate_html(data):
+    html = "<html><body>"
+    html += "<h1>Data Dictionary</h1>"
+    html += "<table>"
+    for key, value in data.items():
+        html += "<tr><td>{}</td><td>{}</td></tr>".format(key, value)
+    html += "</table>"
+    html += "</body></html>"
+
+    return Markup(html)
+
 @app.route('/process-form', methods=['POST'])
 def process_form():
     # command = request.form["command"]
@@ -110,7 +160,7 @@ def process_form():
     recurse = ""
     dump = ""
 
-    data_dict = {}
+    # data_dict = {}
     data_dict.clear()
     for key, value in form_data.items():
         if key == "command":
@@ -132,10 +182,10 @@ def process_form():
         elif key == "dumpCheck":
             dump = value
 
-    data_dict = vol2.run(command, filePath, "./outputtest", [])
+    print(command)
+    data_dict = vol2.run(command,filePath,"./outputtest",[])
     # data_dict = vol2.run("windows.psscan.PsScan","./wanncry.vmem","./outputtest",[])
     # print("File: "+filePath)
-    print(command)
     print(data_dict)
     return jsonify(data_dict)
 
