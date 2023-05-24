@@ -222,7 +222,7 @@ def run(pluginName, filePath, outputPath, argument):
             # args.recurse = argument[2]
     elif pluginName == "windows.malfind.Malfind":
         if argument:
-            args.pid = argument[0]
+            args.pid = [argument[0]]
             args.dump = argument[1]
     elif pluginName == "windows.cmdline.CmdLine":
         if argument:
