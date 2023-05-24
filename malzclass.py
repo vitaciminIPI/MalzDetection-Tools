@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import sys
 import vol2 as v
 import os
 from time import sleep
@@ -24,7 +23,8 @@ class MalwareAttributes(ABC):
         "malware_types" : [],
         "dict_dlllist" : {},
         "dict_cmdline" : {},
-        "dict_handles" : {}
+        "dict_handles" : {},
+        "dict_malfind" : {}
     }
  
     registryKey = ["MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE", "CURRENTCONTROLSET\\CONTROL\\HIVELIST", "CONTROLSET002\\CONTROL\\SESSION MANAGER", "CURRENTCONTROLSET\\SERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICESONCE", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\NOTIFY", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\USERINIT", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\SHELL"]
@@ -40,7 +40,7 @@ class MalwareAttributes(ABC):
     def run(self):
         pass
 
-class TrojanMalz(MalwareAttributes, UtilitiesMalz):
+class Emotet(MalwareAttributes, UtilitiesMalz):
     
     def run(self):
         if os.path.isfile(self.filepath):
@@ -51,15 +51,31 @@ class TrojanMalz(MalwareAttributes, UtilitiesMalz):
                 infoImage = v.run("windows.info.Info", self.filepath, self.outputpath, []).copy()
                 self.maliciousData["info"].update(infoImage)
                 
-                entry = self.entry(self.filepath, self.outputpath, self.clientAPI)
+                netscan = v.run("windows.netscan.NetScan", self.filepath, self.outputpath, []).copy()
+                temp = netscan["ForeignAddr"]
 
-                if entry:
+                maliciousIp = self.checkNetwork(netscan, self.clientAPI)
+
+                if maliciousIp:
+                    self.maliciousData['ipv4'] = maliciousIp
+                    indexOfMaliciousIP = []
+                    maliciousPID = []
                     
-                    for key in entry.keys():
-                        if key in self.maliciousData.keys():
-                            self.maliciousData[key] = entry[key]
+                    print("[+] Getting index")
+                    
+                    for ad in temp:
+                        if ad in maliciousIp:
+                            indexOfMaliciousIP.append(temp.index(ad))
+                    
+                    print(f"idx of mals : {indexOfMaliciousIP}")
 
-                    uniquePID = entry['pid']
+                    for idx in indexOfMaliciousIP:
+                        index = netscan["PID"][idx]
+                        maliciousPID.append(index)
+                    
+                    print("[+] Getting malicious PID")
+                    
+                    uniquePID = list(set(maliciousPID))
                     pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, [])
                     ppidList = []
                     notOrphan = True
@@ -108,7 +124,7 @@ class TrojanMalz(MalwareAttributes, UtilitiesMalz):
 
                     listCMD = {}
                     listDLL = {}
-                    listHandles = {}
+                    listMalfind = {}
 
                     print("[+] Getting all cmd arguments. . .")
                     for pid in maliciousList:
@@ -126,7 +142,7 @@ class TrojanMalz(MalwareAttributes, UtilitiesMalz):
 
                     print("[+] Getting all DLL from malicious process. . .")
                     for pid in maliciousList:
-                        dll = v.run("windows.dlllist.DllList", self.filepath, self.outputpath, [pid, False])
+                        dll = v.run("windows.dlllist.DllList", self.filepath, self.outputpath, [pid, False]).copy()
                         
                         if not listDLL:
                             listDLL.update(dll)
@@ -137,40 +153,31 @@ class TrojanMalz(MalwareAttributes, UtilitiesMalz):
                     
                     self.maliciousData["dict_dlllist"] = listDLL
 
-                    print("[+] Getting all handles from malicious process. . .")
+                    print("[+] Running Malfind plugin. . . ")
+
                     for pid in maliciousList:
-                        handles = v.run("windows.handles.Handles", self.filepath, self.outputpath, [pid])
+                        malfind = v.run("windows.malfind.Malfind", self.filepath, self.outputpath, [pid, False])
 
-                        if not listHandles:
-                            listHandles.update(handles)
+                        if not listCMD:
+                            # saved cmdline
+                            listMalfind.update(cmdline)
                         else:
-                            for key in listHandles.keys():
-                                if key in handles:
-                                    listHandles[key].append(handles[key][0])
+                            for key in listMalfind.keys():
+                                if key in malfind:
+                                    listMalfind[key].append(malfind[key][0])
 
-                    self.maliciousData["dict_handles"] = listHandles
+                    self.maliciousData['dict_malfind'] = listMalfind
 
-                    print("[+] Checking registry. . .")
-
-                    for reg in self.registryKey:
-                        printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, self.outputpath, [reg])
-                        typeLen = len(printkey["Type"])
-
-                        for i in range(typeLen):
-                            if printkey["Type"][i] != "Key":
-                                sublist = [printkey[key][i] for key in printkey.keys()]
-                                self.maliciousData["registry"].append(sublist)
-
-                    # print(self.maliciousData)
                     return self.maliciousData
-                    # sys.exit()
-
+                else:
+                    print("[!] File is benign")
+                    return None
             except Exception as e:
                 print(f"[!] Error : {e}")
         else:
             print("[!] Error: File not found")
 
-class RansomMalz(MalwareAttributes, UtilitiesMalz):
+class WannaCry(MalwareAttributes, UtilitiesMalz):
 
     def run(self):
         if os.path.isfile(self.filepath): 
@@ -181,18 +188,34 @@ class RansomMalz(MalwareAttributes, UtilitiesMalz):
                 infoImage = v.run("windows.info.Info", self.filepath, self.outputpath, []).copy()
                 self.maliciousData["info"].update(infoImage)
 
-                entry = self.entry(self.filepath, self.outputpath, self.clientAPI)
-                
-                if entry:
+                netscan = v.run("windows.netscan.NetScan", self.filepath, self.outputpath, []).copy()
+                temp = netscan["ForeignAddr"]
 
-                    for key in entry.keys():
-                        if key in self.maliciousData.keys():
-                            self.maliciousData[key] = entry[key]
+                maliciousIp = self.checkNetwork(netscan, self.clientAPI)
 
-                    uniquePID = entry['pid']
+                if maliciousIp:
+                    self.maliciousData['ipv4'] = maliciousIp
+                    indexOfMaliciousIP = []
+                    maliciousPID = []
+                    
+                    print("[+] Getting index")
+                    
+                    for ad in temp:
+                        if ad in maliciousIp:
+                            indexOfMaliciousIP.append(temp.index(ad))
+                    
+                    print(f"idx of mals : {indexOfMaliciousIP}")
+
+                    for idx in indexOfMaliciousIP:
+                        index = netscan["PID"][idx]
+                        maliciousPID.append(index)
+                    
+                    print("[+] Getting malicious PID")
+                    
+                    uniquePID = list(set(maliciousPID))
 
                     print("[+] Scanning running process. . .")
-                    pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, [])
+                    pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, []).copy()
                     
                     ppidList = []
                     notOrphan = True
@@ -245,7 +268,7 @@ class RansomMalz(MalwareAttributes, UtilitiesMalz):
                     
                     print("[+] Finding suspicious process that already exit")
 
-                    psscan = v.run("windows.psscan.PsScan", self.filepath, self.outputpath, [])
+                    psscan = v.run("windows.psscan.PsScan", self.filepath, self.outputpath, []).copy()
 
                     scanPPID = psscan["PPID"]
                     lenPPIDList = len(scanPPID)
@@ -266,7 +289,7 @@ class RansomMalz(MalwareAttributes, UtilitiesMalz):
                     print("[+] Getting all cmd arguments. . .")
 
                     for malz in maliciousList:
-                        cmdline = v.run("windows.cmdline.CmdLine", self.filepath, self.outputpath, [malz])
+                        cmdline = v.run("windows.cmdline.CmdLine", self.filepath, self.outputpath, [malz]).copy()
                         
                         if not listCMD:
                             listCMD.update(cmdline)
@@ -279,7 +302,7 @@ class RansomMalz(MalwareAttributes, UtilitiesMalz):
                     print("[+] Getting all DLL from malicious process. . .")
 
                     for malz in maliciousList:
-                        dll = v.run("windows.dlllist.DllList", self.filepath, self.outputpath, [malz, False])
+                        dll = v.run("windows.dlllist.DllList", self.filepath, self.outputpath, [malz, False]).copy()
                         
                         if not listDLL:
                             listDLL.update(dll)
@@ -293,7 +316,7 @@ class RansomMalz(MalwareAttributes, UtilitiesMalz):
                     print("[+] Getting all handles from malicious process. . .")
 
                     for malz in maliciousList:
-                        handles = v.run("windows.handles.Handles", self.filepath, self.outputpath, [malz])
+                        handles = v.run("windows.handles.Handles", self.filepath, self.outputpath, [malz]).copy()
 
                         if not listHandles:
                             listHandles.update(handles)
@@ -306,7 +329,7 @@ class RansomMalz(MalwareAttributes, UtilitiesMalz):
                     print("[+] Checking registry. . .")
 
                     for reg in self.registryKey:
-                        printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, self.outputpath, [reg])
+                        printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, self.outputpath, [reg]).copy()
 
                         typeLen = len(printkey["Type"])
 
@@ -354,12 +377,13 @@ class RansomMalz(MalwareAttributes, UtilitiesMalz):
                     return self.maliciousData
                 else:
                     print("[!] File is benign")
+                    return None
             except Exception as e:
                 print(f"[!] Error : {e} ")
         else:
             print(f"[!] Error: {self.outputpath} file not found")
 
-class WormMalz(MalwareAttributes, UtilitiesMalz):
+class StuxNet(MalwareAttributes, UtilitiesMalz):
 
     def run(self):
         if os.path.isfile(self.filepath): 
@@ -370,145 +394,162 @@ class WormMalz(MalwareAttributes, UtilitiesMalz):
                 infoImage = v.run("windows.info.Info", self.filepath, self.outputpath, []).copy()
                 self.maliciousData["info"].update(infoImage)
 
-                entry = self.entry(self.filepath, self.outputpath, self.clientAPI)
-                
-                if entry:
+                pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, []).copy()
+                dup, indcs = self.checkProcDup(pslist)
+                anchestorindcs = []
+                malsPid = []
 
-                    for key in entry.keys():
-                        if key in self.maliciousData.keys():
-                            self.maliciousData[key] = entry[key]
+                if dup:
+                    anchestorindcs = indcs
+                    pidOfSpoof = []
 
-                    uniquePID = entry['pid']
-                    pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, []).copy()                    
-                    ppidList = []
-                    notOrphan = True
-                    
-                    print("[+] Find the parent process. . .")
-                    for pid in uniquePID:
-                        idx = pslist["PID"].index(pid)
-                        ppid = pslist["PPID"][idx]
+                    for i, _ in enumerate(dup):
+                        for idx, idxOfPid in enumerate(indcs[i]):
+                            anchestorPid = pslist['PPID'][idxOfPid]
+                            anchestorindcs[i][idx] = anchestorPid
+
+                    for indx, process in enumerate(dup):
+                        uniqueList = set(anchestorindcs[indx])
+                        sizeListUnique  = len(uniqueList)
                         
-                        if ppid in pslist["PID"]:
-                            
-                            while notOrphan:
-                                if ppid in pslist["PID"]:
-                                    ppidList.append(ppid)
-                                    pidTemp = ppid
-                                    pidIdx = pslist["PID"].index(pidTemp)
-                                    ppid = pslist["PPID"][pidIdx]
-                                else:
-                                    notOrphan = False
+                        if process == "csrss.exe" or process == "System" or process == "wininit.exe" or process == "winlogon.exe" or process == "explorer.exe":
+                            for pid in anchestorindcs[indx]:
+                                if pid in pslist['PID']:
+                                    ppidIdx = pslist["PID"].index(pid)
+                                    ppid = pslist["PPID"][ppidIdx] 
+                                    if ppid in pslist["PID"]:
+                                        if indx not in pidOfSpoof:
+                                            pidOfSpoof.append(pid)
                         else:
-                            continue
-
-                    anchestorPid = ppidList[-1]
-                    listPPID = pslist["PPID"]
-                    lenlistPPID = len(listPPID)
-                    
-                    print("[+] Getting all process from anchestor")
-                    
-                    for idx in range(lenlistPPID):
-                        if listPPID[idx] == anchestorPid:
-                            susPID = pslist["PID"][idx]
-                            if susPID in listPPID:
-                                childIdxList = [idx for idx in range(lenlistPPID) if listPPID[idx] == susPID]
-                                for child in childIdxList:
-                                    pidTemp = pslist["PID"][child]
-                                    if pidTemp not in ppidList:
-                                        ppidList.append(pidTemp)
+                            if sizeListUnique >= 2:
+                                for pid in anchestorindcs[indx]:
+                                    pidOfSpoof.append(pid)
+                            elif sizeListUnique == 1:
+                                continue
                             else:
-                                if susPID not in ppidList:
-                                    ppidList.append(susPID)
-                        else:
-                            continue
+                                print("[!] Error : Somethings wrong")
 
-                    maliciousList = ppidList + uniquePID
-
-                    malsPid = maliciousList
-                    listCMD = {}
-                    listDLL = {}
-                    listHandles = {}
-
-                    print("[+] Getting all cmd arguments. . .")
-                    for pid in malsPid:
-                        cmdline = v.run("windows.cmdline.CmdLine", self.filepath, self.outputpath, [pid])
-
-                        if not listCMD:
-                            # saved cmdline
-                            listCMD.update(cmdline)
-                        else:
-                            for key in listCMD.keys():
-                                if key in cmdline:
-                                    listCMD[key].append(cmdline[key][0])
-                    
-                    self.maliciousData["dict_cmdline"] = listCMD
-
-                    print("[+] Getting all DLL from malicious process. . .")
-                    for pid in malsPid:
-                        dll = v.run("windows.dlllist.DllList", self.filepath, self.outputpath, [pid, False])
-                        
-                        if not listDLL:
-                            listDLL.update(dll)
-                        else:
-                            for key in listDLL.keys():
-                                if key in dll:
-                                    listDLL[key].append(dll[key][0])
-                    
-                    self.maliciousData["dict_dlllist"] = listDLL
-
-                    print("[+] Getting all handles from malicious process. . .")
-                    for pid in malsPid:
-                        handles = v.run("windows.handles.Handles", self.filepath, self.outputpath, [pid])
-
-                        if not listHandles:
-                            listHandles.update(handles)
-                        else:
-                            for key in listHandles.keys():
-                                if key in handles:
-                                    listHandles[key].append(handles[key][0])
-
-                    self.maliciousData["dict_handles"] = listHandles
-
-                    print("[+] Checking registry. . .")
-
-                    for reg in self.registryKey:
-                        printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, self.outputpath, [reg])
-                        typeLen = len(printkey["Type"])
-
-                        for i in range(typeLen):
-                            if printkey["Type"][i] != "Key":
-                                sublist = [printkey[key][i] for key in printkey.keys()]
-                                self.maliciousData["registry"].append(sublist)
-
-                    newdirpath = self.createDirs(self.outputpath, "Mod")
-                    
-                    print(self.maliciousData)
+                    newdirpath = self.createDirs(self.outputpath, "Exe")
 
                     # dump
-                    print("[*] Dumping modules")
-                    v.run("windows.modules.Modules", self.filepath, newdirpath, [True])
+                    for pid in pidOfSpoof:
+                        print(f"Dumping pid {pid}")
+                        v.run("windows.pslist.PsList", self.filepath, newdirpath, [None, pid, True])
 
                     folder_path = newdirpath
                     file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
                     print("[+] Checking file to virus total")
+        
                     for file_name in os.listdir(folder_path):
                         file_path = os.path.join(folder_path, file_name)
                         if os.path.isfile(file_path):
-                            if file_count >= 5:
-                                sleep(15)
-                            if not file_name.startswith("."):
-                                file_hash = self.getFileHash(file_path)
-                                print(f"\-->[*] File Name : {file_name} ")
-                                ismal, typemalz = self.checksumVT(self.clientAPI, file_hash)
+                            for pid in pidOfSpoof:
+                                pidstr = str(pid)
+                                if pidstr in file_name:
+                                    if file_count >= 5:
+                                        sleep(15)
+            
+                                    if not file_name.startswith("."):
+                                        file_hash = self.getFileHash(file_path)
+                                        
+                                        print(f"\-->[*] File Name : {file_name} ")
+                                        ismals, typeMals = self.checksumVT(self.clientAPI, file_hash)
+                                        
+                                        if ismals:
+                                            malsPid.append(pid)
+                                            idx = pslist["PID"].index(pid)
+                                            procname = pslist["ImageFileName"][idx]
+                                            self.maliciousData["process_name"].append(procname)
+                                            self.maliciousData["pid"].append(pid)
+                                            self.maliciousData["exe_name"].append(file_name)
+                                            self.maliciousData["malware_types"].append(typemalz)
 
-                                if ismal:
-                                    self.maliciousData['malware_types'] = typemalz
-                                    self.maliciousData['mod_name'].append(file_name)
-                    
-                    return self.maliciousData
-                
+                    if malsPid:
+                        listCMD = {}
+                        listDLL = {}
+                        listHandles = {}
+
+                        print("[+] Getting all cmd arguments. . .")
+                        for pid in malsPid:
+                            cmdline = v.run("windows.cmdline.CmdLine", self.filepath, self.outputpath, [pid])
+
+                            if not listCMD:
+                                # saved cmdline
+                                listCMD.update(cmdline)
+                            else:
+                                for key in listCMD.keys():
+                                    if key in cmdline:
+                                        listCMD[key].append(cmdline[key][0])
+                        
+                        self.maliciousData["dict_cmdline"] = listCMD
+
+                        print("[+] Getting all DLL from malicious process. . .")
+                        for pid in malsPid:
+                            dll = v.run("windows.dlllist.DllList", self.filepath, self.outputpath, [pid, False])
+                            
+                            if not listDLL:
+                                listDLL.update(dll)
+                            else:
+                                for key in listDLL.keys():
+                                    if key in dll:
+                                        listDLL[key].append(dll[key][0])
+                        
+                        self.maliciousData["dict_dlllist"] = listDLL
+
+                        print("[+] Getting all handles from malicious process. . .")
+                        for pid in malsPid:
+                            handles = v.run("windows.handles.Handles", self.filepath, self.outputpath, [pid])
+
+                            if not listHandles:
+                                listHandles.update(handles)
+                            else:
+                                for key in listHandles.keys():
+                                    if key in handles:
+                                        listHandles[key].append(handles[key][0])
+
+                        self.maliciousData["dict_handles"] = listHandles
+
+                        print("[+] Checking registry. . .")
+
+                        for reg in self.registryKey:
+                            printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, self.outputpath, [reg])
+                            typeLen = len(printkey["Type"])
+
+                            for i in range(typeLen):
+                                if printkey["Type"][i] != "Key":
+                                    sublist = [printkey[key][i] for key in printkey.keys()]
+                                    self.maliciousData["registry"].append(sublist)
+
+                        newdirpath = self.createDirs(self.outputpath, "Mod")
+                        
+                        print(self.maliciousData)
+
+                        # dump
+                        print("[*] Dumping modules")
+                        v.run("windows.modules.Modules", self.filepath, newdirpath, [True])
+
+                        folder_path = newdirpath
+                        file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
+                        print("[+] Checking file to virus total")
+                        for file_name in os.listdir(folder_path):
+                            file_path = os.path.join(folder_path, file_name)
+                            if os.path.isfile(file_path):
+                                if file_count >= 5:
+                                    sleep(15)
+                                if not file_name.startswith("."):
+                                    file_hash = self.getFileHash(file_path)
+                                    print(f"\-->[*] File Name : {file_name} ")
+                                    ismal, typemalz = self.checksumVT(self.clientAPI, file_hash)
+
+                                    if ismal:
+                                        self.maliciousData['malware_types'] = typemalz
+                                        self.maliciousData['mod_name'].append(file_name)
+                        
+                        return self.maliciousData
+              
                 else:
                     print("[!] File is benign")
+                    return None
             except Exception as e:
                 print(f"[!] Error : {e}")
 

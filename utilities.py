@@ -7,7 +7,7 @@ from datetime import datetime
 import os
 import vol2 as v
 from time import sleep
- 
+
 class UtilitiesMalz:
     def isValidIPv4(self, ip_str):
         # check apakah string berformat ipv4
@@ -251,7 +251,7 @@ class UtilitiesMalz:
             return entryData
         
         else: # Check proc spoofing
-            pslist = v.run("windows.pslist.PsList", filepath, outputpath, [])
+            pslist = v.run("windows.pslist.PsList", filepath, outputpath, []).copy()
             dup, indcs = self.checkProcDup(pslist)
             anchestorindcs = []
             malsPid = []
