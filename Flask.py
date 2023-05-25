@@ -1,8 +1,7 @@
-from flask import Flask, render_template, request, jsonify, render_template, send_file, session, make_response, Markup
+from flask import Flask, render_template, request, jsonify, render_template, session, make_response, Markup, send_from_directory
 import os
 from datetime import datetime
 import vol2, malzclass
-from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -73,12 +72,17 @@ def generate_report():
     tanggal_waktu_sekarang = datetime.now()
     deretan_angka = tanggal_waktu_sekarang.strftime('%Y%m%d%H%M%S')
     report_filename = 'report ' + deretan_angka + '.html'
+    session["fileName"] = report_filename
     report_path = os.path.join(destination_directory, report_filename)
     with open(report_path, 'w') as report_file:
         report_file.write(html_content)
 
     # Kembalikan file HTML yang diunduh
-    return send_file(report_path, as_attachment=False)
+    response = make_response(html_content)
+    response.headers['Content-Disposition'] = 'attachment; filename=data.html'
+    response.headers['Content-type'] = 'text/html'
+
+    return response
 
 
 @app.route('/processAuto', methods=['POST'])
@@ -97,9 +101,10 @@ def process_formAuto():
     print(autoDict)
     html_content = generate_html(autoDict)
     tanggal_waktu_sekarang = datetime.now()
-    deretan_angka = tanggal_waktu_sekarang.strftime('%Y%m%d_%H%M%S')
+    deretan_angka = tanggal_waktu_sekarang.strftime('%Y-%m-%d_%H%M%S')
     # Menyimpan file HTML di folder /static/reports
     filename = "data_" + deretan_angka + ".html"
+    session["fileName"] = filename
     save_path = os.path.join(app.static_folder, 'reports')
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -114,6 +119,11 @@ def process_formAuto():
     response.headers['Content-type'] = 'text/html'
 
     return response
+
+@app.route('/open_report', methods=['GET'])
+def open_report():
+    filename = session.get('fileName')  # Ganti dengan nama file HTML yang ingin dibuka
+    return send_from_directory('static/reports', filename)
 
 def generate_html(data):
     html = "<html><body>"
@@ -160,7 +170,7 @@ def process_form():
     recurse = ""
     dump = ""
 
-    # data_dict = {}
+    data_dict = {}
     data_dict.clear()
     for key, value in form_data.items():
         if key == "command":
