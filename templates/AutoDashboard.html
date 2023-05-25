@@ -70,6 +70,30 @@
             border: none;
             cursor: pointer;
         }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.7);
+            /* Warna latar belakang transparan */
+            z-index: 9999;
+            /* Menempatkan elemen loading di depan konten */
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loading-content img {
+            width: 50px;
+            height: 50px;
+        }
     </style>
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -114,19 +138,39 @@
         <nav id="sidebar">
 
             <ul class="list-unstyled components">
-                <form name="my-form" id="my-form" action="#" method="post">
-                    <h4 class="mx-1 my-3">We will analyze the memory file without wasting your time</h4>
+                <h4 class="mx-1 my-3">We will analyze the memory file without wasting your time</h4>
+                <form id="form1" method="post" enctype="multipart/form-data">
+                    <!-- Form pertama -->
                     <label for="file-path" style="margin-top: 20px;">Browse Image:</label><br>
-                    <input type="text" name="file-path" id="file-path" onclick="openFileExplorer()"><span
-                        style="margin-left: 10px;"><i class='fas fa-file'></i></span>
+                    <input type="file" name="file" onchange="submitform()">
                 </form>
-                <!-- <form name="my-form" id="my-form" action="#" method="post">
-                </form> -->
+                <form name="my-formauto" id="my-formauto" method="post">
+                    <label style="margin-top: 20px; margin-bottom: 0;" for="command">Malware:</label>
+                    <select name="malware" id="malware">
+                        <option value="">Select a Malware</option>
+                        <option value="wannacry">WannaCry</option>
+                        <option value="emotet">Emotet</option>
+                        <option value="stuxnet">StuxNet</option>
+                    </select>
+                    <div class="help-container">
+                        <button id="helpButton" type="button">?</button>
+
+                        <div id="helpInfo">
+                            <p>Pilih metode analisis sesuai malware yang ada pada file memori.</p>
+                        </div>
+                    </div>
+                </form>
             </ul>
         </nav>
 
         <!-- Page Content  -->
         <div id="content">
+            <div id="loading" style="display: none;">
+                <div class="loading-content">
+                    <img src="../static/loading.gif" alt="Loading...">
+                    <p>Loading...</p>
+                </div>
+            </div>
             <button type="button" id="sidebarCollapse" class="btn btn-info">
                 <i class="fas fa-align-left"></i>
             </button>
@@ -136,7 +180,7 @@
                 <i class="fas fa-align-justify"></i>
             </button>
             <div class="center">
-                <button class="btn-circle">Start</button>
+                <button class="btn-circle" id="submitButton">Start</button>
             </div>
         </div>
     </div>
@@ -153,118 +197,166 @@
         crossorigin="anonymous"></script>
 
     <script type="text/javascript">
-        function showInput() {
-            var pidField = document.getElementById("pid-field");
-            var offsetField = document.getElementById("offset-field");
-            var keyField = document.getElementById("key-field");
-            var dumpCheck = document.getElementById("dump");
-            var physicalField = document.getElementById("physical-field");
-            var includeCorrupt = document.getElementById("include-corrupt");
-            var recurseCheck = document.getElementById("recurse");
-            var command = document.getElementById("command").value;
+        $(document).ready(function () {
+            var loadingElement = document.getElementById('loading');
+            var filepath = "{{ file_path }}" + "/static/reports";
+            $('#submitButton').click(function (e) {
+                loadingElement.style.display = 'flex';
+                var formData = $('#my-formauto').serialize(); // Mengumpulkan nilai-nilai form
 
-            if (command == "pslist" || command == "pstree" || command == "psscan" || command == "dlllist" || command == "handles" || command == "malfind" || command == "cmdline") {
-                pidField.style.display = "block";
-            } else {
-                pidField.style.display = "none";
-            }
-            if (command == "pslist" || command == "pstree" || command == "psscan") {
-                physicalField.style.display = "block";
-            } else {
-                physicalField.style.display = "none";
-            }
-            if (command == "printkey") {
-                offsetField.style.display = "block";
-                keyField.style.display = "block";
-                recurseCheck.style.display = "block";
-            } else {
-                offsetField.style.display = "none";
-                keyField.style.display = "none";
-                recurseCheck.style.display = "none";
-            }
-            if (command == "netscan" || command == "netstat") {
-                includeCorrupt.style.display = "block";
-            } else {
-                includeCorrupt.style.display = "none";
-            }
-            if (command == "pslist" || command == "psscan" || command == "dlllist" || command == "malfind") {
-                dumpCheck.style.display = "block";
-            } else {
-                dumpCheck.style.display = "none";
-            }
-        }
-        function openFileExplorer() {
-            // Membuat elemen input untuk memilih file
-            var input = document.createElement('input');
-            input.type = 'file';
+                var htmlReport;
+                $.ajax({
+                    url: '/processAuto', // URL endpoint Flask
+                    type: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        // Tindakan yang akan diambil setelah berhasil dikirim
+                        // htmlReport = response;
+                        loadingElement.style.display = 'none';
+                        alert("File telah berhasil diunduh pada: " + filepath);
+                        $.ajax({
+                            url: '/open_report',  // URL endpoint Flask
+                            type: 'GET',
+                            success: function (response) {
+                                var file = new Blob([response], { type: 'text/html' });
+                                var fileUrl = URL.createObjectURL(file);
 
-            // Menambahkan event listener untuk mendapatkan path file yang dipilih
-            input.onchange = function (event) {
-                var file = event.target.files[0];
+                                var link = document.createElement('a');
+                                link.href = fileUrl;
+                                link.target = '_blank';
+                                link.click();
+                            },
+                            error: function (error) {
+                                alert(error);
+                            }
+                        });
 
-                // Memeriksa apakah file yang dipilih valid
-                if (file) {
-                    // Mengambil nilai 'name' dari file yang dipilih
-                    var path = file.name;
-
-                    // Mengubah value dari input text dengan id 'file' menjadi path file yang dipilih
-                    document.getElementById('file-path').value = path;
-                } else {
-                    console.log('Tidak ada file yang dipilih.');
-                }
-            };
-
-            // Membuka file explorer
-            input.click();
-        }
-        document.getElementById("my-form").addEventListener("submit", function (event) {
-            event.preventDefault();
-            var pidValue = document.getElementById("pid-fieldvalue").value;
-            var offsetValue = document.getElementById("offset-fieldvalue").value;
-            var keyValue = document.getElementById("key-fieldvalue").value;
-            if (document.getElementById("dumpCheck").checked) {
-                document.getElementById("dumpCheck").value = "true"
-            } else {
-                document.getElementById("dumpCheck").value = "false"
-            }
-            if (document.getElementById("include-corruptCheck").checked) {
-                document.getElementById("include-corruptCheck").value = "true";
-            } else {
-                document.getElementById("include-corruptCheck").value = "false"
-            }
-            if (document.getElementById("recurseCheck").checked) {
-                document.getElementById("recurseCheck").value = "true";
-            } else {
-                document.getElementById("recurseCheck").value = "false"
-            }
-            if (document.getElementById("physical-check").checked) {
-                document.getElementById("physical-check").value = "true";
-            } else {
-                document.getElementById("physical-check").value = "false"
-            }
-            var command = document.getElementById("command").value;
-            var filePath = document.getElementById("file-path").value;
-            $.ajax({
-                type: "POST", // method request
-                url: "/process-form", // url request
-                data: $('form').serialize(), // data yang dikirimkan
-                success: function (result) { // response sukses
-                    // $("#message").text("Command: " + result.message);
-                    // $.each(result, function (key, value) {
-                    //     console.log(key + ": " + value);
-                    //     // atau Anda bisa menambahkan kode untuk menampilkan data tersebut di halaman web
-                    // });
-                    var html = '';
-                    $.each(result, function (key, value) {
-                        html += key + ": " + value + "<br>";
-                    });
-                    $('#result').html(html);
-                },
-                error: function (xhr, status, error) { // response gagal
-                    console.log(xhr.responseText); // menampilkan pesan error di console log
-                }
+                    },
+                    error: function (error) {
+                        // Tindakan yang akan diambil jika terjadi kesalahan
+                        alert(error);
+                        loadingElement.style.display = 'none';
+                    }
+                });
             });
         });
+
+        function submitform() {
+            $('#form1').submit();
+        }
+
+        // function showInput() {
+        //     var pidField = document.getElementById("pid-field");
+        //     var offsetField = document.getElementById("offset-field");
+        //     var keyField = document.getElementById("key-field");
+        //     var dumpCheck = document.getElementById("dump");
+        //     var physicalField = document.getElementById("physical-field");
+        //     var includeCorrupt = document.getElementById("include-corrupt");
+        //     var recurseCheck = document.getElementById("recurse");
+        //     var command = document.getElementById("command").value;
+
+        //     if (command == "pslist" || command == "pstree" || command == "psscan" || command == "dlllist" || command == "handles" || command == "malfind" || command == "cmdline") {
+        //         pidField.style.display = "block";
+        //     } else {
+        //         pidField.style.display = "none";
+        //     }
+        //     if (command == "pslist" || command == "pstree" || command == "psscan") {
+        //         physicalField.style.display = "block";
+        //     } else {
+        //         physicalField.style.display = "none";
+        //     }
+        //     if (command == "printkey") {
+        //         offsetField.style.display = "block";
+        //         keyField.style.display = "block";
+        //         recurseCheck.style.display = "block";
+        //     } else {
+        //         offsetField.style.display = "none";
+        //         keyField.style.display = "none";
+        //         recurseCheck.style.display = "none";
+        //     }
+        //     if (command == "netscan" || command == "netstat") {
+        //         includeCorrupt.style.display = "block";
+        //     } else {
+        //         includeCorrupt.style.display = "none";
+        //     }
+        //     if (command == "pslist" || command == "psscan" || command == "dlllist" || command == "malfind") {
+        //         dumpCheck.style.display = "block";
+        //     } else {
+        //         dumpCheck.style.display = "none";
+        //     }
+        // }
+        // function openFileExplorer() {
+        //     // Membuat elemen input untuk memilih file
+        //     var input = document.createElement('input');
+        //     input.type = 'file';
+
+        //     // Menambahkan event listener untuk mendapatkan path file yang dipilih
+        //     input.onchange = function (event) {
+        //         var file = event.target.files[0];
+
+        //         // Memeriksa apakah file yang dipilih valid
+        //         if (file) {
+        //             // Mengambil nilai 'name' dari file yang dipilih
+        //             var path = file.name;
+
+        //             // Mengubah value dari input text dengan id 'file' menjadi path file yang dipilih
+        //             document.getElementById('file-path').value = path;
+        //         } else {
+        //             console.log('Tidak ada file yang dipilih.');
+        //         }
+        //     };
+
+        //     // Membuka file explorer
+        //     input.click();
+        // }
+        // document.getElementById("my-form").addEventListener("submit", function (event) {
+        //     event.preventDefault();
+        //     var pidValue = document.getElementById("pid-fieldvalue").value;
+        //     var offsetValue = document.getElementById("offset-fieldvalue").value;
+        //     var keyValue = document.getElementById("key-fieldvalue").value;
+        //     if (document.getElementById("dumpCheck").checked) {
+        //         document.getElementById("dumpCheck").value = "true"
+        //     } else {
+        //         document.getElementById("dumpCheck").value = "false"
+        //     }
+        //     if (document.getElementById("include-corruptCheck").checked) {
+        //         document.getElementById("include-corruptCheck").value = "true";
+        //     } else {
+        //         document.getElementById("include-corruptCheck").value = "false"
+        //     }
+        //     if (document.getElementById("recurseCheck").checked) {
+        //         document.getElementById("recurseCheck").value = "true";
+        //     } else {
+        //         document.getElementById("recurseCheck").value = "false"
+        //     }
+        //     if (document.getElementById("physical-check").checked) {
+        //         document.getElementById("physical-check").value = "true";
+        //     } else {
+        //         document.getElementById("physical-check").value = "false"
+        //     }
+        //     var command = document.getElementById("command").value;
+        //     var filePath = document.getElementById("file-path").value;
+        //     $.ajax({
+        //         type: "POST", // method request
+        //         url: "/process-form", // url request
+        //         data: $('form').serialize(), // data yang dikirimkan
+        //         success: function (result) { // response sukses
+        //             // $("#message").text("Command: " + result.message);
+        //             // $.each(result, function (key, value) {
+        //             //     console.log(key + ": " + value);
+        //             //     // atau Anda bisa menambahkan kode untuk menampilkan data tersebut di halaman web
+        //             // });
+        //             var html = '';
+        //             $.each(result, function (key, value) {
+        //                 html += key + ": " + value + "<br>";
+        //             });
+        //             $('#result').html(html);
+        //         },
+        //         error: function (xhr, status, error) { // response gagal
+        //             console.log(xhr.responseText); // menampilkan pesan error di console log
+        //         }
+        //     });
+        // });
 
         $(document).ready(function () {
             $('#sidebarCollapse').on('click', function () {
@@ -288,6 +380,21 @@
         sidebar.addEventListener("transitionstart", shiftButton);
 
         window.addEventListener("resize", shiftButton);
+
+        // Tombol Help
+        var helpButton = document.getElementById("helpButton");
+        var helpInfo = document.getElementById("helpInfo");
+
+        helpButton.addEventListener("click", function () {
+            helpInfo.style.display = "block";
+        });
+
+        document.addEventListener("click", function (event) {
+            var targetElement = event.target;
+            if (targetElement != helpButton && targetElement != helpInfo) {
+                helpInfo.style.display = "none";
+            }
+        });
     </script>
 </body>
 

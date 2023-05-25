@@ -89,13 +89,211 @@
             border-radius: 4px;
             margin-bottom: 10px;
         }
+
+        /*
+    DEMO STYLE
+*/
+
+        @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #fafafa;
+            width: 100%;
+        }
+
+        p {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1em;
+            font-weight: 300;
+            line-height: 1.7em;
+            color: #999;
+        }
+
+        a,
+        a:hover,
+        a:focus {
+            color: inherit;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .navbar {
+            width: 100%;
+        }
+
+        .navbar-btn {
+            box-shadow: none;
+            outline: none !important;
+            border: none;
+        }
+
+        .btn {
+            position: fixed;
+            top: 10%;
+            transform: translateY(-50%);
+            left: 260px;
+            z-index: 1;
+            transition: left 0.3s ease;
+        }
+
+        .line {
+            width: 100%;
+            height: 1px;
+            border-bottom: 1px dashed #ddd;
+            margin: 40px 0;
+        }
+
+        /* ---------------------------------------------------
+    SIDEBAR STYLE
+----------------------------------------------------- */
+
+        .wrapper {
+            display: flex;
+            position: relative;
+            width: 100%;
+            align-items: stretch;
+        }
+
+        #sidebar {
+            min-width: 250px;
+            max-width: 250px;
+            background: #1e1c1d;
+            color: #fff;
+            transition: all 0.3s;
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        #sidebar.active {
+            margin-left: -250px;
+        }
+
+        #sidebar ul p {
+            color: #fff;
+            padding: 10px;
+        }
+
+        #sidebar ul li a {
+            padding: 10px;
+            font-size: 1.1em;
+            display: block;
+        }
+
+        #sidebar ul li a:hover {
+            color: #1e1c1d;
+            background: #fff;
+        }
+
+        #sidebar ul li.active>a,
+        a[aria-expanded="true"] {
+            color: #fff;
+            background: #1e1c1d;
+        }
+
+        a[data-toggle="collapse"] {
+            position: relative;
+        }
+
+        .dropdown-toggle::after {
+            display: block;
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+        }
+
+        ul ul a {
+            font-size: 0.9em !important;
+            padding-left: 30px !important;
+            background: #1e1c1d;
+        }
+
+        ul.CTAs {
+            padding: 20px;
+        }
+
+        ul.CTAs a {
+            text-align: center;
+            font-size: 0.9em !important;
+            display: block;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        /* ---------------------------------------------------
+    CONTENT STYLE
+----------------------------------------------------- */
+
+        #content {
+            width: 100%;
+            padding: 20px;
+            min-height: 100vh;
+            transition: all 0.3s;
+            height: auto;
+            margin-left: 300px;
+            /* position: absolute; */
+            /* background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("background.jpg"); */
+        }
+
+        table {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        /* ---------------------------------------------------
+    MEDIAQUERIES
+----------------------------------------------------- */
+
+        @media (max-width: 768px) {
+            #sidebar {
+                margin-left: -250px;
+            }
+
+            #sidebar.active {
+                margin-left: 0;
+            }
+
+            #sidebarCollapse span {
+                display: none;
+            }
+        }
+
+        .help-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        #helpButton {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #f8f8f8;
+            border: none;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #helpInfo {
+            position: absolute;
+            left: -200px;
+            bottom: -120px;
+            width: 200px;
+            padding: 10px;
+            background-color: #404040;
+            border: 1px solid #ccc;
+            z-index: 9999;
+            display: none;
+        }
     </style>
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <!-- Our Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="./style.css">
-    <link rel="stylesheet" href="../style.css">
+
     <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
 
     <!-- Font Awesome JS -->
@@ -168,36 +366,8 @@
                 </section>
                 <section class="section" id="section3">
                     <h1>Windows.Pslist</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
+                    <p>Got {{ jprocess }} dangerous processes:</p>
+                    
                 </section>
                 <section class="section" id="section4">
                     <h1>Windows.Pstree</h1>
