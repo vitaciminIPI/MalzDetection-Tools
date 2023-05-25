@@ -99,11 +99,11 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top" style="background: #404040;">
-        <div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top" style="background: #404040;width: 100%;">
+        <div class="container-fluid" style="width: 100%;">
             <a class="navbar-brand" href="./index.html" style="color: white;">Auto Volt <span
                     style="font-size: 11px;">v1.0</span></a>
-            <div class="collapse navbar-collapse">
+            <div class="collapse navbar-collapse" style="width: 100%;">
                 <ul class="navbar-nav mx-5  me-auto mb-2 mb-lg-0">
                     <li class="nav-item ms-3 me-5" style="margin: 0;padding: 0;">
                         <div class="vl"></div>
@@ -138,7 +138,7 @@
                     <label style="margin-top: 20px; margin-bottom: 0;" for="command">Command:</label>
                     <select name="command" id="command" onchange="showInput()">
                         <option value="">Select a Command</option>
-                        <option value="info">windows.info</option>
+                        <option value="windows.info.Info">windows.info</option>
                         <option value="windows.pslist.PsList">windows.pslist</option>
                         <option value="windows.pstree.PsTree">windows.pstree</option>
                         <option value="windows.psscan.PsScan">windows.psscan</option>
@@ -147,7 +147,6 @@
                         <option value="windows.dlllist.DllList">windows.dlllist</option>
                         <option value="windows.handles.Handles">windows.handles</option>
                         <option value="windows.registry.printkey.PrintKey">windows.registry.printkey</option>
-                        <option value="filescan">windows.filescan</option>
                         <option value="windows.malfind.Malfind">windows.malfind</option>
                         <option value="windows.cmdline.CmdLine">windows.cmdline</option>
                     </select>
@@ -229,6 +228,12 @@
 
     <script type="text/javascript">
         var dictionary = {};
+        // command = ["windows.info.Info", "windows.pslist.PsList", "windows.pstree.PsTree", "windows.psscan.PsScan", "windows.dlllist.DllList", "windows.handles.Handles", "windows.malfind.Malfind", "windows.cmdline.CmdLine", "windows.registry.printkey.PrintKey", "windows.netscan.NetScan", "windows.netstat.NetStat"]
+        // for (var i = 0; i < command.length; i++) {
+        //     if (!(command[i] in dictionary)) {
+        //         dictionary[command] = {};
+        //     }
+        // }
         function showInput() {
             var pidField = document.getElementById("pid-field");
             var offsetField = document.getElementById("offset-field");
@@ -304,12 +309,15 @@
                 } else if (tempDict[i] == "Name" && command == "windows.registry.printkey.PrintKey") {
                     counter = i;
                     break;
+                } else if (tempDict[i] == "Variable" && command == "windows.info.Info") {
+                    counter = i;
+                    break;
                 }
             };
             return counter;
         }
-        
-        function submitform(){
+
+        function submitform() {
             $('#form1').submit();
         }
 
@@ -339,7 +347,7 @@
             } else {
                 document.getElementById("physical-check").value = "false"
             }
-            var command = document.getElementById("command").value;
+            var commandsend = document.getElementById("command").value;
             // var filePath = document.getElementById("file-path").value;
             var table = document.getElementById("data-table");
             table.style.display = "block";
@@ -370,9 +378,9 @@
                         tableHeaderRow.appendChild(headerCell);
                     }
 
-                    var indekskey = findIndeks(headerKeys, command)
+                    var indekskey = findIndeks(headerKeys, commandsend)
                     console.log(indekskey)
-                    if (command == "windows.registry.printkey.PrintKey") {
+                    if (commandsend == "windows.registry.printkey.PrintKey") {
                         for (var j = 0; j < result["Key"].length; j++) {
                             var tableBody = document.getElementById("tableBody");
                             var dataRow = document.createElement("tr");
@@ -383,30 +391,69 @@
                                 dataRow.appendChild(dataCell);
                             }
                             var tempkey = dataRow.children[indekskey].textContent;
-                            if (dictionary.hasOwnProperty(tempkey)) {
+                            if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(tempkey)) {
                                 dataRow.classList.add("clicked-row");
                             }
                             tableBody.appendChild(dataRow);
                             dataRow.addEventListener("click", function () {
                                 var key = this.children[indekskey].textContent;
-                                if (dictionary.hasOwnProperty(key)) {
+                                if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(key)) {
                                     this.classList.add("clicked-row");
                                 }
                                 if (!this.classList.contains("clicked-row")) {
-                                    for (var i = 1; i < dataRow.cells.length; i++) {
+                                    for (var i = 0; i < dataRow.cells.length; i++) {
                                         var value = this.cells[i].textContent;
-                                        addToDictionary(key, value);
+                                        if (!(value == key)) {
+                                            addToDictionary(commandsend, key, value);
+                                        }
                                     }
                                     console.log(dictionary);
                                     this.classList.add("clicked-row");
                                 } else {
-                                    removeFromDictionary(key)
+                                    removeFromDictionary(commandsend, key)
                                     this.classList.remove("clicked-row");
+                                    console.log(dictionary);
                                 }
                             });
-
                         }
-                    } else {
+                    } else if (commandsend == "windows.info.Info") {
+                        for (var j = 0; j < result["Variable"].length; j++) {
+                            var tableBody = document.getElementById("tableBody");
+                            var dataRow = document.createElement("tr");
+                            for (var key in result) {
+                                var dataCell = document.createElement("td");
+                                var dataText = document.createTextNode(result[key][j]);
+                                dataCell.appendChild(dataText);
+                                dataRow.appendChild(dataCell);
+                            }
+                            var tempkey = dataRow.children[indekskey].textContent;
+                            if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(tempkey)) {
+                                dataRow.classList.add("clicked-row");
+                            }
+                            tableBody.appendChild(dataRow);
+                            dataRow.addEventListener("click", function () {
+                                var key = this.children[indekskey].textContent;
+                                if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(key)) {
+                                    this.classList.add("clicked-row");
+                                }
+                                if (!this.classList.contains("clicked-row")) {
+                                    for (var i = 0; i < dataRow.cells.length; i++) {
+                                        var value = this.cells[i].textContent;
+                                        if (!(value == key)) {
+                                            addToDictionary(commandsend, key, value);
+                                        }
+                                    }
+                                    console.log(dictionary);
+                                    this.classList.add("clicked-row");
+                                } else {
+                                    removeFromDictionary(commandsend, key)
+                                    this.classList.remove("clicked-row");
+                                    console.log(dictionary);
+                                }
+                            });
+                        }
+                    }
+                    else {
                         for (var j = 0; j < result["PID"].length; j++) {
                             var tableBody = document.getElementById("tableBody");
                             var dataRow = document.createElement("tr");
@@ -417,25 +464,28 @@
                                 dataRow.appendChild(dataCell);
                             }
                             var tempkey = dataRow.children[indekskey].textContent;
-                            if (dictionary.hasOwnProperty(tempkey)) {
+                            if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(tempkey)) {
                                 dataRow.classList.add("clicked-row");
                             }
                             tableBody.appendChild(dataRow);
                             dataRow.addEventListener("click", function () {
                                 var key = this.children[indekskey].textContent;
-                                if (dictionary.hasOwnProperty(key)) {
+                                if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(key)) {
                                     this.classList.add("clicked-row");
                                 }
                                 if (!this.classList.contains("clicked-row")) {
-                                    for (var i = 1; i < dataRow.cells.length; i++) {
+                                    for (var i = 0; i < dataRow.cells.length; i++) {
                                         var value = this.cells[i].textContent;
-                                        addToDictionary(key, value);
+                                        if (!(value == key)) {
+                                            addToDictionary(commandsend, key, value);
+                                        }
                                     }
                                     console.log(dictionary);
                                     this.classList.add("clicked-row");
                                 } else {
-                                    removeFromDictionary(key)
+                                    removeFromDictionary(commandsend, key)
                                     this.classList.remove("clicked-row");
+                                    console.log(dictionary);
                                 }
                             });
                         }
@@ -483,17 +533,28 @@
         window.addEventListener("resize", shiftButton);
 
 
-        function addToDictionary(key, value) {
-            if (key in dictionary) {
-                dictionary[key].push(value); // Menambahkan nilai baru ke array yang ada
+        function addToDictionary(command, key, value) {
+            // Memeriksa apakah key1 ada dalam dict
+            if (dictionary.hasOwnProperty(command)) {
+                // Memeriksa apakah key3 ada dalam key1
+                if (dictionary[command].hasOwnProperty(key)) {
+                    dictionary[command][key].push(value);
+                } else {
+                    dictionary[command][key] = [value];
+                }
             } else {
-                dictionary[key] = [value]; // Membuat array baru dengan nilai sebagai elemen pertama
+                dictionary[command] = {};
+                dictionary[command][key] = [value];
             }
         }
 
-        function removeFromDictionary(key) {
-            delete dictionary[key];
-            console.log(dictionary);
+        function removeFromDictionary(command, key) {
+            if (dictionary.hasOwnProperty(command)) {
+                // Memeriksa apakah key3 ada dalam key1
+                if (dictionary[command].hasOwnProperty(key)) {
+                    delete dictionary[command][key];
+                }
+            }
         }
 
         var filepath = "{{ file_path }}" + "/static/reports";
@@ -504,7 +565,24 @@
                 url: "/generate_report", // url request
                 data: $('form').serialize(), // data yang dikirimkan
                 success: function (result) { // response sukses
+                    console.log(result)
                     alert('File berhasil diunduh pada ' + filepath);
+                    $.ajax({
+                        url: '/open_report',  // URL endpoint Flask
+                        type: 'GET',
+                        success: function (response) {
+                            var file = new Blob([response], { type: 'text/html' });
+                            var fileUrl = URL.createObjectURL(file);
+
+                            var link = document.createElement('a');
+                            link.href = fileUrl;
+                            link.target = '_blank';
+                            link.click();
+                        },
+                        error: function (error) {
+                            alert(error);
+                        }
+                    });
                 },
                 error: function (xhr, status, error) { // response gagal
                     console.log(xhr.responseText); // menampilkan pesan error di console log
