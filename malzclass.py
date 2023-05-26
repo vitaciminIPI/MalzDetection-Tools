@@ -5,6 +5,8 @@ from time import sleep
 from utilities import UtilitiesMalz
 from datetime import datetime
 
+# BERESIN CLASS LOCKBIT DAN METASPLOIT
+
 class MalwareAttributes(ABC):
     maliciousData = {
         "info" : {},
@@ -261,7 +263,7 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
 
                     maliciousList = ppidList + uniquePID
                     
-                    # print(maliciousList)
+                    print(maliciousList)
 
                     for pid in maliciousList:
                         self.maliciousData["sus_pid"].append(pid)
@@ -329,14 +331,17 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                     print("[+] Checking registry. . .")
 
                     for reg in self.registryKey:
-                        printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, self.outputpath, [reg]).copy()
+                        try:
+                            printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, self.outputpath, [reg]).copy()
 
-                        typeLen = len(printkey["Type"])
+                            typeLen = len(printkey["Type"])
 
-                        for i in range(typeLen):
-                            if printkey["Type"][i] != "Key":
-                                sublist = [printkey[key][i] for key in printkey.keys()]
-                                self.maliciousData["registry"].append(sublist)
+                            for i in range(typeLen):
+                                if printkey["Type"][i] != "Key":
+                                    sublist = [printkey[key][i] for key in printkey.keys()]
+                                    self.maliciousData["registry"].append(sublist)
+                        except:
+                            continue
 
                     self.maliciousData["dict_handles"] = listHandles
 
@@ -352,7 +357,7 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                     file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
                     print("[+] Checking file to virus total")
 
-                    pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, [])
+                    # pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, [])
                     
                     for file_name in os.listdir(folder_path):
                         file_path = os.path.join(folder_path, file_name)
@@ -553,5 +558,295 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
             except Exception as e:
                 print(f"[!] Error : {e}")
 
+        else:
+            print(f"[!] Error: {self.outputpath} file not found")
+
+class LockBit(MalwareAttributes, UtilitiesMalz):
+
+    def run(self):
+        if os.path.isfile(self.filepath):
+            try:
+                if not os.path.exists(self.outputpath):
+                    os.makedirs(self.outputpath)
+
+                infoImage = v.run("windows.info.Info", self.filepath, self.outputpath, []).copy()
+                self.maliciousData["info"].update(infoImage)
+
+                malfind = v.run("windows.malfind.Malfind", self.filepath, self.outputpath, []).copy()
+                
+                malPidList = list(set(malfind['PID']))
+
+                newdirpath = self.createDirs(self.outputpath, "Exe")
+
+                for pid in malPidList:
+                    print(f"Dumping pid {pid}")
+                    v.run("windows.pslist.PsList", self.filepath, newdirpath, [False, pid, True])
+
+                folder_path = newdirpath
+                file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
+                print("[+] Checking file to virus total")
+    
+                for file_name in os.listdir(folder_path):
+                    file_path = os.path.join(folder_path, file_name)
+                    if os.path.isfile(file_path):
+                        if file_count >= 5:
+                            sleep(15)
+                        if not file_name.startswith("."):
+                            file_hash = self.getFileHash(file_path)
+                            print(f"\-->[*] File Name : {file_name} ")
+                            ismal, typemalz = self.checksumVT(self.clientAPI, file_hash)
+
+                            if ismal:
+                                self.maliciousData['malware_types'] = typemalz
+                                self.maliciousData['mod_name'].append(file_name)
+
+                    
+            except Exception as e:
+                print(f"[!] Error : {e}")
+        else:
+            print(f"[!] Error: {self.outputpath} file not found")
+        
+class MetasPreter(MalwareAttributes, UtilitiesMalz):
+
+    def run(self):
+        if os.path.isfile(self.filepath):
+            try:
+                infoImage = v.run("windows.info.Info", self.filepath, self.outputpath, []).copy()
+                self.maliciousData["info"].update(infoImage)
+
+                # malfind = v.run("windows.malfind.Malfind", self.filepath, self.outputpath, []).copy()
+
+                # malPidList = list(set(malfind['PID']))
+                
+                # dump injected code
+
+                # newdirpath = self.createDirs(self.outputpath, "Mal")
+
+                # for pid in malPidList:
+                #     print(f"Dumping pid {pid}")
+                #     v.run("windows.malfind.Malfind", self.filepath, newdirpath, [pid, True])
+
+                # folder_path = newdirpath
+                # file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
+                # print("[+] Checking file to virus total")
+
+                # maliciousPidList = []
+
+                # for file_name in os.listdir(folder_path):
+                #     file_path = os.path.join(folder_path, file_name)
+                #     if os.path.isfile(file_path):
+                #         for pid in malPidList:
+                #             pidstr = str(pid)    
+                #             if file_count >= 5:
+                #                 sleep(15)
+                #             if not file_name.startswith("."):
+                #                 file_hash = self.getFileHash(file_path)
+                #                 print(f"\-->[*] File Name : {file_name} ")
+                #                 ismal, typemalz = self.checksumVT(self.clientAPI, file_hash)
+
+                #                 if ismal:
+                #                     maliciousPidList.append(pid)
+                #                     self.maliciousData['pid'].append(pidstr)
+                #                     self.maliciousData['malware_types'] = typemalz
+                #                     self.maliciousData['mod_name'].append(file_name)
+                
+                # yang hit dari vt = 704, 3732
+                maliciousPidList = [704, 3732]
+                idxChild = []
+
+                pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, []).copy()
+                listPPID = pslist['PPID']
+                lenlistPPID = len(listPPID)
+                pidPsList = pslist['PID']
+
+                print("[+] Get child")
+                # get child
+                for pid in maliciousPidList:
+                    temp = self.getChild(pslist, pid)
+                    idxChild += temp
+
+                # print(idxChild)
+                idxChild = list(set(idxChild))
+
+                print("[+] Get child pid from pslist")
+                for idx in idxChild:
+                    pid = pidPsList[idx]
+                    maliciousPidList.append(pid)
+
+                print(maliciousPidList)
+
+                # get parent
+                ppidList = []
+                notOrphan = True
+                
+                print("[+] Find the parent PID. . .")
+                for pid in maliciousPidList:
+                    idx = pslist["PID"].index(pid)
+                    ppid = pslist["PPID"][idx]
+                    
+                    if ppid in pslist["PID"]:
+                        
+                        while notOrphan:
+                            if ppid in pslist["PID"]:
+                                ppidList.append(ppid)
+                                pidTemp = ppid
+                                pidIdx = pslist["PID"].index(pidTemp)
+                                ppid = pslist["PPID"][pidIdx]
+                            else:
+                                notOrphan = False
+                    else:
+                        continue
+
+                # print(ppidList)
+                # Cari process yang merupakan child proc dari ancestor
+                anchestorPid = ppidList[-1]              
+                print("[+] Getting all process from anchestor")
+                
+                for idx in range(lenlistPPID):
+                    if pidPsList[idx] == anchestorPid:
+                        susPID = pslist["PID"][idx]
+                        if susPID in listPPID:
+                            childIdxList = [idx for idx in range(lenlistPPID) if listPPID[idx] == susPID]
+                            for child in childIdxList:
+                                pidTemp = pslist["PID"][child]
+                                if pidTemp not in ppidList:
+                                    ppidList.append(pidTemp)
+                        else:
+                            if susPID not in ppidList:
+                                ppidList.append(susPID)
+                    else:
+                        continue
+                
+                
+                # ppidlist = [2720, 2840, 2848, 1180, 3732, 704, 3756]
+                maliciousPidList += ppidList
+                # [704, 2720, 2848, 1352, 3756, 2840, 3732, 4056, 1180]
+                uniqueMalList = list(set(maliciousPidList))
+
+                print(f"unique pid {uniqueMalList}")
+
+                self.maliciousData["sus_pid"] = uniqueMalList
+
+                # VirusTotal analysis
+                # dump exe terlebih dahulu
+
+                newdirpath = self.createDirs(self.outputpath, "exe")
+
+                # for mal in uniqueMalList:
+                #     v.run("windows.pslist.PsList", self.filepath, newdirpath, [False, mal, True])
+
+                # folder_path = newdirpath
+                # file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
+                # print("[+] Checking file to virus total")
+
+                hitPid = []
+
+                # for file_name in os.listdir(folder_path):
+                #     file_path = os.path.join(folder_path, file_name)
+                #     if os.path.isfile(file_path):
+                #         for pid in uniqueMalList:
+                #             pidstr = str(pid)    
+                #             if file_count >= 5:
+                #                 sleep(15)
+                #             if not file_name.startswith("."):
+                #                 file_hash = self.getFileHash(file_path)
+                #                 print(f"\-->[*] File Name : {file_name} ")
+                #                 ismal, typemalz = self.checksumVT(self.clientAPI, file_hash)
+
+                #                 if ismal:
+                #                     hitPid.append(pid)
+                #                     self.maliciousData['pid'].append(pidstr)
+                #                     self.maliciousData['malware_types'] = typemalz
+                #                     self.maliciousData['mod_name'].append(file_name)
+                
+                # kalo ada hit pid
+                # Volatility analysis
+                # hitPid = [704, 2720, 2848, 1352, 3756, 2840, 3732, 4056, 1180]
+                hitPid = [704, 2720, 2848, 1352, 4056]
+
+                if hitPid:
+                    print("[+] Volatility Analysis")
+
+                    print("[+] Checking Network Connections")
+
+                    netscan = v.run("windows.netscan.NetScan", self.filepath, newdirpath, []).copy()
+                    netPort = netscan['ForeignPort']
+                    
+                    print("[+] Checking Foreign Port")
+                    metas_port = [port for port in netPort if port == 4444]
+                    
+                    if metas_port:
+                        self.maliciousData['metas_port'] = metas_port[0]
+                    
+                    print("[+] Checking Foreign Address")
+                    maliciousIp = self.checkNetwork(netscan, self.clientAPI)
+
+                    if maliciousIp:
+                        self.maliciousData['ipv4'] = maliciousIp
+
+                    listCMD = {}
+                    # listDLL = {}
+                    # listHandles = {}
+                    print("[+] Getting all cmd arguments. . .")
+
+                    for malz in hitPid:
+                        cmdline = v.run("windows.cmdline.CmdLine", self.filepath, newdirpath, [malz]).copy()
+                        
+                        if not listCMD:
+                            listCMD.update(cmdline)
+                        else:
+                            for key in listCMD.keys():
+                                if key in cmdline:
+                                    listCMD[key].append(cmdline[key][0])
+                    
+                    self.maliciousData["dict_cmdline"] = listCMD
+                    # print("[+] Getting all DLL from malicious process. . .")
+
+                    # for malz in hitPid:
+                    #     dll = v.run("windows.dlllist.DllList", self.filepath, newdirpath, [malz, False]).copy()
+                        
+                    #     if not listDLL:
+                    #         listDLL.update(dll)
+                    #     else:
+                    #         for key in listDLL.keys():
+                    #             if key in dll:
+                    #                 listDLL[key].append(dll[key][0])
+
+                    # self.maliciousData["dict_dlllist"] = listDLL
+
+                    # print("[+] Getting all handles from malicious process. . .")
+
+                    # for malz in hitPid:
+                    #     handles = v.run("windows.handles.Handles", self.filepath, newdirpath, [malz]).copy()
+
+                    #     if not listHandles:
+                    #         listHandles.update(handles)
+                    #     else:
+                    #         for key in listHandles.keys():
+                    #             if key in handles:
+                    #                 listHandles[key].append(handles[key][0])
+
+                    # self.maliciousData["dict_handles"] = listHandles
+                    # print("[+] Checking registry. . .")
+
+                    # for reg in self.registryKey:
+                    #     try:
+                    #         printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, newdirpath, [reg]).copy()
+
+                    #         typeLen = len(printkey["Type"])
+
+                    #         for i in range(typeLen):
+                    #             if printkey["Type"][i] != "Key":
+                    #                 sublist = [printkey[key][i] for key in printkey.keys()]
+                    #                 self.maliciousData["registry"].append(sublist)
+                    #     except:
+                    #         continue
+
+                    # self.maliciousData["dict_handles"] = listHandles
+
+                    print(self.maliciousData)
+
+            except Exception as e:
+                print(f"[!] Error : {e}")
         else:
             print(f"[!] Error: {self.outputpath} file not found")

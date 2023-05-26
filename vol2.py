@@ -2,7 +2,7 @@ from volatility3.framework import contexts
 from volatility3.framework import automagic
 from volatility3 import framework
 from volatility3.framework import interfaces
-from volatility3.cli import PrintedProgress, MuteProgress
+from volatility3.cli import MuteProgress
 from volatility3.framework import plugins
 from volatility3.cli import CommandLine as cmd
 import volatility3
@@ -10,13 +10,11 @@ from volatility3.cli import text_renderer, volargparse
 from volatility3.framework import interfaces
 import os
 import volatility3.framework.constants
-import argparse, inspect
-from typing import Dict, Type, Union, Any
-from urllib import parse, request
-from volatility3.framework.configuration import requirements
+from urllib import request
+# from volatility3.framework.configuration import requirements
 from volatility3.cli import text_renderer
 # from tabulate import tabulate
- 
+
 VOLDATA = {}
 
 """
@@ -89,7 +87,7 @@ def renderersEx(grid: interfaces.renderers.TreeGrid, pluginName):
         for key in VOLDATA.keys():
             if objecttest[index].__class__.__name__ == "NotApplicableValue":
                 VOLDATA[key].append("N/A")
-            elif objecttest[index].__class__.__name__ == "UnreadableValue" :
+            elif objecttest[index].__class__.__name__ == "UnreadableValue" or objecttest[index].__class__.__name__ == "UnparsableValue" :
                 VOLDATA[key].append("-")
             else:
                 VOLDATA[key].append(objecttest[index])
@@ -122,8 +120,11 @@ def disasmToHex(dictOfData, key):
     data = []
 
     for dis in disasm:
-        strdis = text_renderer.display_disassembly(dis)
-        data.append(strdis)
+        try:
+            strdis = text_renderer.display_disassembly(dis)
+            data.append(strdis)
+        except:
+            continue
     
     dictOfData[key] = data
 
@@ -134,10 +135,12 @@ def hexDumpBytes(dictOfData, key):
 
     for h in hexaData:
         strtemp = ""
-        strdata = text_renderer.hex_bytes_as_text(h)
-        strtemp += strdata
-        readableChar.append(strtemp)
-    
+        try:
+            strdata = text_renderer.hex_bytes_as_text(h)
+            strtemp += strdata
+            readableChar.append(strtemp)
+        except:
+            strtemp += ""
     dictOfData[key] = readableChar
 
 def run(pluginName, filePath, outputPath, argument):
