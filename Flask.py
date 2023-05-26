@@ -46,6 +46,9 @@ def auto():
 
 @app.route('/generate_report', methods=['POST'])
 def generate_report():
+    manDict = request.json
+    
+
     with open('templates/generateReport.html', 'r') as template_file:
         template_content = template_file.read()
 
@@ -62,6 +65,35 @@ def generate_report():
     html_content = html_content.replace(
         '{{ systime }}', '2023-06-16  02:25:51')
     html_content = html_content.replace('{{ sysroot }}', 'c:\windows')
+
+    # Pslist==================================================================================
+    pslist_data = manDict.get('windows.pslist.PsList',{})
+    
+    if 'windows.pslist.PsList' in manDict:
+        header1_values = None
+        for value in pslist_data.values():
+            if isinstance(value, list):
+                header1_values = value
+                break
+        num_header1_values = len(header1_values)
+        num_keys_key1 = len(pslist_data)
+        pslist_content = ''
+        for value in pslist_data.values():
+            counter = 0
+            print(value)
+            pslist_row = '<tr>'
+            print(f"key: {value[6]}")
+            for indexval in range(num_header1_values):
+                if counter == 11:
+                    break
+                print(f"value({str(indexval)}): {value[indexval]}")
+                pslist_row += f'<td>{value[indexval]}</td>'
+                counter+=1
+            pslist_row += '</tr>'
+            pslist_content += pslist_row
+        html_content = html_content.replace('{PSLIST_CONTENT}', pslist_content)
+    
+    
 
     # Tentukan direktori tujuan untuk menyimpan file HTML yang diunduh
     destination_directory = os.path.join(os.getcwd(), 'static', 'reports')
