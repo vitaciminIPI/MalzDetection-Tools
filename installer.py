@@ -51,7 +51,9 @@ def main():
     print(f"{Fore.BLUE} {Style.DIM} {banner}")
     print(f"{Fore.RED} {bottom}")
 
-    inp = input(f"{Fore.LIGHTGREEN_EX} Do you want to install AutoVolt? [y/N] \n>")
+
+    print(f"{Fore.LIGHTGREEN_EX} Do you want to install AutoVolt? [y/N]")
+    inp = input(f"{Fore.LIGHTGREEN_EX} >")
 
     if inp.lower() == 'y':
         try:

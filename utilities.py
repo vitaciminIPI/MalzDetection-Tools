@@ -217,6 +217,18 @@ class UtilitiesMalz:
         os.mkdir(newdirpath)
         return newdirpath
 
+    def getChild(self, pslist, pid):
+        ppidlist = pslist['PPID']
+
+        idxPid = []
+        print(ppidlist)
+        for idx, ppid in enumerate(ppidlist):
+            # print(pid)
+            if ppid == pid:
+                idxPid.append(idx)
+
+        return idxPid
+
     # Cari pid bermasalahnya saja
     # sisanya sperti nyari anchestor dan child di masing" class 
     def entry(self, filepath, outputpath, clientAPI):
