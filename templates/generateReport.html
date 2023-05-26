@@ -238,8 +238,19 @@
         }
 
         table {
-            overflow-x: auto;
-            max-width: 100%;
+            border-collapse: collapse;
+            width: 100%;
+            text-align: center;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid black;
+        }
+
+        th {
+            background-color: green;
         }
 
         /* ---------------------------------------------------
@@ -366,41 +377,51 @@
                 </section>
                 <section class="section" id="section3">
                     <h1>Windows.Pslist</h1>
-                    <p>Got {{ jprocess }} dangerous processes:</p>
-                    
+                    <p>User tagged process</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>CreateTime</th>
+                                <th>ExitTime</th>
+                                <th>File output</th>
+                                <th>Handles</th>
+                                <th>ImageFileName</th>
+                                <th>Offset(V)</th>
+                                <th>PID</th>
+                                <th>PPID</th>
+                                <th>SessionId</th>
+                                <th>Threads</th>
+                                <th>Wow64</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {PSLIST_CONTENT}
+                        </tbody>
+                    </table>
                 </section>
                 <section class="section" id="section4">
                     <h1>Windows.Pstree</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
+                    <p>User tagged process</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>CreateTime</th>
+                                <th>ExitTime</th>
+                                <th>File output</th>
+                                <th>Handles</th>
+                                <th>ImageFileName</th>
+                                <th>Offset(V)</th>
+                                <th>PID</th>
+                                <th>PPID</th>
+                                <th>SessionId</th>
+                                <th>Threads</th>
+                                <th>Wow64</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {PSTREE_CONTENT}
+                        </tbody>
+                    </table>
                 </section>
                 <section class="section" id="section5">
                     <h1>Windows.Psscan</h1>

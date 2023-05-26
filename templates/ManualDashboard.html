@@ -78,6 +78,10 @@
             position: absolute;
             right: 0;
         }
+
+        .hidden {
+            display: none;
+        }
     </style>
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -303,13 +307,16 @@
             var counter = 0;
             for (var i = 0; i < tempDict.length; i++) {
                 // console.log(tempDict[i])
-                if (tempDict[i] == "PID") {
-                    counter = i;
-                    break;
-                } else if (tempDict[i] == "Name" && command == "windows.registry.printkey.PrintKey") {
+                if (tempDict[i] == "Name" && command == "windows.registry.printkey.PrintKey") {
                     counter = i;
                     break;
                 } else if (tempDict[i] == "Variable" && command == "windows.info.Info") {
+                    counter = i;
+                    break;
+                } else if (tempDict[i] == "row" && command == "windows.netscan.NetScan") {
+                    counter = i;
+                    break;
+                } else if (tempDict[i] == "PID" && command != "windows.netscan.NetScan") {
                     counter = i;
                     break;
                 }
@@ -369,17 +376,19 @@
                     // $.each(result, function (key, value) {
 
                     // });
-                    console.log(result)
+                    result["row"] = []
                     var tableHeaderRow = table.insertRow();
                     var headerKeys = Object.keys(result);
                     for (var i = 0; i < headerKeys.length; i++) {
                         var headerCell = document.createElement("th");
                         headerCell.textContent = headerKeys[i];
                         tableHeaderRow.appendChild(headerCell);
+                        if (headerKeys[i] == "row") {
+                            headerCell.classList.add("hidden");
+                        }
                     }
-
                     var indekskey = findIndeks(headerKeys, commandsend)
-                    console.log(indekskey)
+                    rowindex = 0
                     if (commandsend == "windows.registry.printkey.PrintKey") {
                         for (var j = 0; j < result["Key"].length; j++) {
                             var tableBody = document.getElementById("tableBody");
@@ -403,16 +412,12 @@
                                 if (!this.classList.contains("clicked-row")) {
                                     for (var i = 0; i < dataRow.cells.length; i++) {
                                         var value = this.cells[i].textContent;
-                                        if (!(value == key)) {
-                                            addToDictionary(commandsend, key, value);
-                                        }
+                                        addToDictionary(commandsend, key, value);
                                     }
-                                    console.log(dictionary);
                                     this.classList.add("clicked-row");
                                 } else {
                                     removeFromDictionary(commandsend, key)
                                     this.classList.remove("clicked-row");
-                                    console.log(dictionary);
                                 }
                             });
                         }
@@ -439,22 +444,24 @@
                                 if (!this.classList.contains("clicked-row")) {
                                     for (var i = 0; i < dataRow.cells.length; i++) {
                                         var value = this.cells[i].textContent;
-                                        if (!(value == key)) {
-                                            addToDictionary(commandsend, key, value);
-                                        }
+                                        addToDictionary(commandsend, key, value);
                                     }
-                                    console.log(dictionary);
                                     this.classList.add("clicked-row");
                                 } else {
                                     removeFromDictionary(commandsend, key)
                                     this.classList.remove("clicked-row");
-                                    console.log(dictionary);
                                 }
                             });
                         }
                     }
                     else {
                         for (var j = 0; j < result["PID"].length; j++) {
+                            if ("row" in result) {
+                                result["row"].push(rowindex)
+                            }
+                            else {
+                                result["row"] = [rowindex];
+                            }
                             var tableBody = document.getElementById("tableBody");
                             var dataRow = document.createElement("tr");
                             for (var key in result) {
@@ -462,6 +469,9 @@
                                 var dataText = document.createTextNode(result[key][j]);
                                 dataCell.appendChild(dataText);
                                 dataRow.appendChild(dataCell);
+                                if (key == "row") {
+                                    dataCell.classList.add("hidden");
+                                }
                             }
                             var tempkey = dataRow.children[indekskey].textContent;
                             if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(tempkey)) {
@@ -476,18 +486,15 @@
                                 if (!this.classList.contains("clicked-row")) {
                                     for (var i = 0; i < dataRow.cells.length; i++) {
                                         var value = this.cells[i].textContent;
-                                        if (!(value == key)) {
-                                            addToDictionary(commandsend, key, value);
-                                        }
+                                        addToDictionary(commandsend, key, value);
                                     }
-                                    console.log(dictionary);
                                     this.classList.add("clicked-row");
                                 } else {
                                     removeFromDictionary(commandsend, key)
                                     this.classList.remove("clicked-row");
-                                    console.log(dictionary);
                                 }
                             });
+                            rowindex++;
                         }
                     }
                     // for (var key in result) {
@@ -560,12 +567,13 @@
         var filepath = "{{ file_path }}" + "/static/reports";
         function notifSuccess() {
             event.preventDefault()
+
             $.ajax({
                 type: "POST", // method request
                 url: "/generate_report", // url request
-                data: $('form').serialize(), // data yang dikirimkan
+                data: JSON.stringify(dictionary), // data yang dikirimkan
+                contentType: 'application/json',
                 success: function (result) { // response sukses
-                    console.log(result)
                     alert('File berhasil diunduh pada ' + filepath);
                     $.ajax({
                         url: '/open_report',  // URL endpoint Flask
