@@ -102,7 +102,7 @@ def byteToString(listOfData):
      for idx in range(lenOfData):
           data = listOfData[idx]
           if isinstance(data, bytes):
-               strbyte = data.decode('utf-16')
+               strbyte = text_renderer.multitypedata_as_text(data)
                listOfData[idx] = strbyte
 
 def intToHex(listOfData):
