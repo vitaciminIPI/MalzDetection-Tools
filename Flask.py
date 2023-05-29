@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, jsonify, render_template, session, make_response, Markup, send_from_directory
 import os
 from datetime import datetime
-import vol2, malzclass
+import vol2, malzclass, re
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -66,10 +67,9 @@ def generate_report():
         '{{ systime }}', '2023-06-16  02:25:51')
     html_content = html_content.replace('{{ sysroot }}', 'c:\windows')
 
-    # Pslist==================================================================================
+    # Pslist =============================================================================================
     pslist_data = manDict.get('windows.pslist.PsList',{})
-    
-    if 'windows.pslist.PsList' in manDict:
+    if 'windows.pslist.PsList' in manDict and bool(pslist_data):
         header1_values = None
         for value in pslist_data.values():
             if isinstance(value, list):
@@ -80,21 +80,192 @@ def generate_report():
         pslist_content = ''
         for value in pslist_data.values():
             counter = 0
-            print(value)
             pslist_row = '<tr>'
-            print(f"key: {value[6]}")
             for indexval in range(num_header1_values):
                 if counter == 11:
                     break
-                print(f"value({str(indexval)}): {value[indexval]}")
                 pslist_row += f'<td>{value[indexval]}</td>'
                 counter+=1
             pslist_row += '</tr>'
             pslist_content += pslist_row
         html_content = html_content.replace('{PSLIST_CONTENT}', pslist_content)
+    elif bool(pslist_data) == False:
+        html_content = html_content.replace('{PSLIST_CONTENT}', 'kosong')
     
+    # Pstree =============================================================================================
+    pstree_data = manDict.get('windows.pstree.PsTree',{})
+    if 'windows.pstree.PsTree' in manDict and bool(pstree_data):
+        header1_values = None
+        for value in pstree_data.values():
+            if isinstance(value, list):
+                header1_values = value
+                break
+        num_header1_values = len(header1_values)
+        num_keys_key1 = len(pstree_data)
+        pstree_content = ''
+        for value in pstree_data.values():
+            counter = 0
+            pstree_row = '<tr>'
+            for indexval in range(num_header1_values):
+                if counter == 10:
+                    break
+                pstree_row += f'<td>{value[indexval]}</td>'
+                counter+=1
+            pstree_row += '</tr>'
+            pstree_content += pstree_row
+        html_content = html_content.replace('{PSTREE_CONTENT}', pstree_content)
+    elif bool(pstree_data) == False:
+        html_content = html_content.replace('{PSTREE_CONTENT}', 'kosong')
     
+    # Psscan =============================================================================================
+    psscan_data = manDict.get('windows.psscan.PsScan',{})
+    if 'windows.psscan.PsScan' in manDict and bool(psscan_data):
+        header1_values = None
+        for value in psscan_data.values():
+            if isinstance(value, list):
+                header1_values = value
+                break
+        num_header1_values = len(header1_values)
+        num_keys_key1 = len(psscan_data)
+        psscan_content = ''
+        for value in psscan_data.values():
+            counter = 0
+            psscan_row = '<tr>'
+            for indexval in range(num_header1_values):
+                if counter == 11:
+                    break
+                psscan_row += f'<td>{value[indexval]}</td>'
+                counter+=1
+            psscan_row += '</tr>'
+            psscan_content += psscan_row
+        html_content = html_content.replace('{PSSCAN_CONTENT}', psscan_content)
+    elif bool(psscan_data) == False:
+        html_content = html_content.replace('{PSSCAN_CONTENT}', 'kosong')
 
+    # Netscan =============================================================================================
+    netscan_data = manDict.get('windows.netscan.NetScan',{})
+    if 'windows.netscan.NetScan' in manDict and bool(netscan_data):
+        header1_values = None
+        for value in netscan_data.values():
+            if isinstance(value, list):
+                header1_values = value
+                break
+        num_header1_values = len(header1_values)
+        num_keys_key1 = len(netscan_data)
+        netscan_content = ''
+        for value in netscan_data.values():
+            counter = 0
+            netscan_row = '<tr>'
+            for indexval in range(num_header1_values):
+                if counter == 10:
+                    break
+                netscan_row += f'<td>{value[indexval]}</td>'
+                counter+=1
+            netscan_row += '</tr>'
+            netscan_content += netscan_row
+        html_content = html_content.replace('{NETSCAN_CONTENT}', netscan_content)
+    elif bool(netscan_data) == False:
+        html_content = html_content.replace('{NETSCAN_CONTENT}', 'kosong')
+    
+    # Dlllist =============================================================================================
+    dlllist_data = manDict.get('windows.dlllist.DllList',{})
+    if 'windows.dlllist.DllList' in manDict and bool(dlllist_data):
+        header1_values = None
+        for value in dlllist_data.values():
+            if isinstance(value, list):
+                header1_values = value
+                break
+        num_header1_values = len(header1_values)
+        num_keys_key1 = len(dlllist_data)
+        dlllist_content = ''
+        for value in dlllist_data.values():
+            counter = 0
+            dlllist_row = '<tr>'
+            for indexval in range(num_header1_values):
+                if counter == 8:
+                    break
+                dlllist_row += f'<td>{value[indexval]}</td>'
+                counter+=1
+            dlllist_row += '</tr>'
+            dlllist_content += dlllist_row
+        html_content = html_content.replace('{DLLLIST_CONTENT}', dlllist_content)
+    elif bool(dlllist_data) == False:
+        html_content = html_content.replace('{DLLLIST_CONTENT}', 'kosong')
+    
+    # Printkey =============================================================================================
+    printkey_data = manDict.get('windows.registry.printkey.PrintKey',{})
+    if 'windows.registry.printkey.PrintKey' in manDict and bool(printkey_data):
+        header1_values = None
+        for value in printkey_data.values():
+            if isinstance(value, list):
+                header1_values = value
+                break
+        num_header1_values = len(header1_values)
+        num_keys_key1 = len(printkey_data)
+        printkey_content = ''
+        for value in printkey_data.values():
+            counter = 0
+            printkey_row = '<tr>'
+            for indexval in range(num_header1_values):
+                if counter == 7:
+                    break
+                printkey_row += f'<td>{value[indexval]}</td>'
+                counter+=1
+            printkey_row += '</tr>'
+            printkey_content += printkey_row
+        html_content = html_content.replace('{PRINTKEY_CONTENT}', printkey_content)
+    elif bool(printkey_data) == False:
+        html_content = html_content.replace('{PRINTKEY_CONTENT}', 'kosong')
+
+    # Malfind =============================================================================================
+    malfind_data = manDict.get('windows.malfind.Malfind',{})
+    if 'windows.malfind.Malfind' in manDict and bool(malfind_data):
+        header1_values = None
+        for value in malfind_data.values():
+            if isinstance(value, list):
+                header1_values = value
+                break
+        num_header1_values = len(header1_values)
+        num_keys_key1 = len(malfind_data)
+        malfind_content = ''
+        for value in malfind_data.values():
+            counter = 0
+            malfind_row = '<tr>'
+            for indexval in range(num_header1_values):
+                if counter == 11:
+                    break
+                malfind_row += f'<td>{value[indexval]}</td>'
+                counter+=1
+            malfind_row += '</tr>'
+            malfind_content += malfind_row
+        html_content = html_content.replace('{MALFIND_CONTENT}', malfind_content)
+    elif bool(malfind_data) == False:
+        html_content = html_content.replace('{MALFIND_CONTENT}', 'kosong')
+
+    # Cmdline =============================================================================================
+    cmdline_data = manDict.get('windows.cmdline.CmdLine',{})
+    if 'windows.cmdline.CmdLine' in manDict and bool(cmdline_data):
+        header1_values = None
+        for value in cmdline_data.values():
+            if isinstance(value, list):
+                header1_values = value
+                break
+        num_header1_values = len(header1_values)
+        num_keys_key1 = len(cmdline_data)
+        cmdline_content = ''
+        for value in cmdline_data.values():
+            counter = 0
+            cmdline_row = '<tr>'
+            for indexval in range(num_header1_values):
+                if counter == 3:
+                    break
+                cmdline_row += f'<td>{value[indexval]}</td>'
+                counter+=1
+            cmdline_row += '</tr>'
+            cmdline_content += cmdline_row
+        html_content = html_content.replace('{CMDLINE_CONTENT}', cmdline_content)
+    elif bool(cmdline_data) == False:
+        html_content = html_content.replace('{CMDLINE_CONTENT}', 'kosong')
     # Tentukan direktori tujuan untuk menyimpan file HTML yang diunduh
     destination_directory = os.path.join(os.getcwd(), 'static', 'reports')
     if not os.path.exists(destination_directory):
