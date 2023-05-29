@@ -67,17 +67,18 @@ class UtilitiesMalz:
                     mal = json_resp['data']['attributes']['last_analysis_stats']['malicious']
                     
                     if mal != 0:
-                        print("--- scanner malware classification ---")
-                        print("//--> [*] Suggested threat label : " + str(json_resp['data']['attributes']['popular_threat_classification']['suggested_threat_label']))
-                        threatCategory = list(json_resp['data']['attributes']['popular_threat_classification']['popular_threat_category'])
-                        malType = (str(json_resp['data']['attributes']['popular_threat_classification']['suggested_threat_label']))
+                        if mal >= 10:
+                            print("--- scanner malware classification ---")
+                            print("//--> [*] Suggested threat label : " + str(json_resp['data']['attributes']['popular_threat_classification']['suggested_threat_label']))
+                            threatCategory = list(json_resp['data']['attributes']['popular_threat_classification']['popular_threat_category'])
+                            malType = (str(json_resp['data']['attributes']['popular_threat_classification']['suggested_threat_label']))
 
-                        for category in threatCategory:
-                            print("//--> [*] Category : " + category["value"])
-                            print("//--> [*] Count : " + str(category["count"]))
-                        
-                        return True, malType
-                    
+                            for category in threatCategory:
+                                print("//--> [*] Category : " + category["value"])
+                                print("//--> [*] Count : " + str(category["count"]))
+                            
+                            return True, malType
+                        return True, None
                     return False, None
                 else:
                     print("\\--> [!] Error")

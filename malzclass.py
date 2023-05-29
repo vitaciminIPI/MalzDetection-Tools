@@ -1,6 +1,7 @@
-from abc import ABC, abstractmethod
 import vol2 as v
 import os
+import copy
+from abc import ABC, abstractmethod
 from time import sleep
 from utilities import UtilitiesMalz
 from datetime import datetime
@@ -29,7 +30,7 @@ class MalwareAttributes(ABC):
         "dict_malfind" : {}
     }
  
-    registryKey = ["MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE", "CURRENTCONTROLSET\\CONTROL\\HIVELIST", "CONTROLSET002\\CONTROL\\SESSION MANAGER", "CURRENTCONTROLSET\\SERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICESONCE", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\NOTIFY", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\USERINIT", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\SHELL"]
+    registryKey = ["MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\WINLOGON", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE", "CURRENTCONTROLSET\\CONTROL\\HIVELIST", "CONTROLSET002\\CONTROL\\SESSION MANAGER", "CURRENTCONTROLSET\\SERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICESONCE", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\NOTIFY", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\USERINIT", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\SHELL"]
     legalProcName = ["System", "smss.exe", "csrss.exe", "wininit.exe", "services.exe", "svchost.exe", "lsass.exe", "winlogon.exe", "explorer.exe", "taskhostw.exe", "RuntimeBroker.exe"]
     clientAPI = "3e7b7c1801535998c249f13d8bfe6b5739ffbc1eaeb4ffe26341f46812d4041e"
     # clientAPIKey = "abea8b6da5856997aef0d511b155df9c541536d841c438693b2fb560486474a4"
@@ -400,12 +401,22 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                 self.maliciousData["info"].update(infoImage)
 
                 pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, []).copy()
+                pidList = pslist['PID']
+
+                print("[+] Checking duplicate process name")
                 dup, indcs = self.checkProcDup(pslist)
-                anchestorindcs = []
+                anchestorindcs = [[]]
                 malsPid = []
 
+
                 if dup:
-                    anchestorindcs = indcs
+                    print("[!] Getting sus pid")
+                    lenOfIdcs = len(indcs)
+                    for idx in range(lenOfIdcs):
+                        for pid in indcs[idx]:
+                            self.maliciousData['sus_pid'] = pid
+
+                    anchestorindcs = copy.deepcopy(indcs)
                     pidOfSpoof = []
 
                     for i, _ in enumerate(dup):
@@ -413,22 +424,27 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                             anchestorPid = pslist['PPID'][idxOfPid]
                             anchestorindcs[i][idx] = anchestorPid
 
+                    print("[+] Check anomaly in duplicate process name")
                     for indx, process in enumerate(dup):
                         uniqueList = set(anchestorindcs[indx])
                         sizeListUnique  = len(uniqueList)
                         
                         if process == "csrss.exe" or process == "System" or process == "wininit.exe" or process == "winlogon.exe" or process == "explorer.exe":
-                            for pid in anchestorindcs[indx]:
+                            for i, pid in enumerate(anchestorindcs[indx]):
                                 if pid in pslist['PID']:
                                     ppidIdx = pslist["PID"].index(pid)
                                     ppid = pslist["PPID"][ppidIdx] 
                                     if ppid in pslist["PID"]:
                                         if indx not in pidOfSpoof:
-                                            pidOfSpoof.append(pid)
+                                            indcsPtr = indcs[indx][i]
+                                            pidmal = pidList[indcsPtr]
+                                            pidOfSpoof.append(pidmal)
                         else:
                             if sizeListUnique >= 2:
-                                for pid in anchestorindcs[indx]:
-                                    pidOfSpoof.append(pid)
+                                for i, pid in enumerate(anchestorindcs[indx]):
+                                    indcsPtr = indcs[indx][i]
+                                    pidmal = pidList[indcsPtr]
+                                    pidOfSpoof.append(pidmal)
                             elif sizeListUnique == 1:
                                 continue
                             else:
@@ -455,19 +471,22 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                                         sleep(15)
             
                                     if not file_name.startswith("."):
-                                        file_hash = self.getFileHash(file_path)
-                                        
-                                        print(f"\-->[*] File Name : {file_name} ")
-                                        ismals, typeMals = self.checksumVT(self.clientAPI, file_hash)
-                                        
-                                        if ismals:
-                                            malsPid.append(pid)
-                                            idx = pslist["PID"].index(pid)
-                                            procname = pslist["ImageFileName"][idx]
-                                            self.maliciousData["process_name"].append(procname)
-                                            self.maliciousData["pid"].append(pid)
-                                            self.maliciousData["exe_name"].append(file_name)
-                                            self.maliciousData["malware_types"].append(typemalz)
+                                        try:
+                                            file_hash = self.getFileHash(file_path)
+                                            
+                                            print(f"\-->[*] File Name : {file_name} ")
+                                            ismals, typeMals = self.checksumVT(self.clientAPI, file_hash)
+                                            
+                                            if ismals and typeMals:
+                                                malsPid.append(pid)
+                                                idx = pslist["PID"].index(pid)
+                                                procname = pslist["ImageFileName"][idx]
+                                                self.maliciousData["process_name"].append(procname)
+                                                self.maliciousData["pid"].append(pid)
+                                                self.maliciousData["exe_name"].append(file_name)
+                                                self.maliciousData["malware_types"].append(typeMals)
+                                        except Exception as e:
+                                            print(e)
 
                     if malsPid:
                         listCMD = {}
@@ -517,41 +536,43 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                         print("[+] Checking registry. . .")
 
                         for reg in self.registryKey:
-                            printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, self.outputpath, [reg])
-                            typeLen = len(printkey["Type"])
+                            try:
+                                printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, self.outputpath, [reg])
+                                typeLen = len(printkey["Type"])
 
-                            for i in range(typeLen):
-                                if printkey["Type"][i] != "Key":
-                                    sublist = [printkey[key][i] for key in printkey.keys()]
-                                    self.maliciousData["registry"].append(sublist)
-
-                        newdirpath = self.createDirs(self.outputpath, "Mod")
-                        
-                        print(self.maliciousData)
-
-                        # dump
-                        print("[*] Dumping modules")
-                        v.run("windows.modules.Modules", self.filepath, newdirpath, [True])
-
-                        folder_path = newdirpath
-                        file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
-                        print("[+] Checking file to virus total")
-                        for file_name in os.listdir(folder_path):
-                            file_path = os.path.join(folder_path, file_name)
-                            if os.path.isfile(file_path):
-                                if file_count >= 5:
-                                    sleep(15)
-                                if not file_name.startswith("."):
-                                    file_hash = self.getFileHash(file_path)
-                                    print(f"\-->[*] File Name : {file_name} ")
-                                    ismal, typemalz = self.checksumVT(self.clientAPI, file_hash)
-
-                                    if ismal:
-                                        self.maliciousData['malware_types'] = typemalz
-                                        self.maliciousData['mod_name'].append(file_name)
-                        
+                                for i in range(typeLen):
+                                    if printkey["Type"][i] != "Key":
+                                        sublist = [printkey[key][i] for key in printkey.keys()]
+                                        self.maliciousData["registry"].append(sublist)
+                            except Exception as e:
+                                print(e)
+                            
                         return self.maliciousData
-              
+                        # newdirpath = self.createDirs(self.outputpath, "Mod")
+                        
+                        # dump
+                        # print("[*] Dumping modules")
+                        # v.run("windows.modules.Modules", self.filepath, newdirpath, [True])
+
+                        # folder_path = newdirpath
+                        # file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
+                        # print("[+] Checking file to virus total")
+                        # for file_name in os.listdir(folder_path):
+                        #     file_path = os.path.join(folder_path, file_name)
+                        #     if os.path.isfile(file_path):
+                        #         if file_count >= 5:
+                        #             sleep(15)
+                        #         if not file_name.startswith("."):
+                        #             try:
+                        #                 file_hash = self.getFileHash(file_path)
+                        #                 print(f"\-->[*] File Name : {file_name} ")
+                        #                 ismal, typemalz = self.checksumVT(self.clientAPI, file_hash)
+
+                        #                 if ismal and typemalz:
+                        #                     self.maliciousData['malware_types'] = typemalz
+                        #                     self.maliciousData['mod_name'].append(file_name)
+                        #             except Exception as e:
+                        #                 print(e)
                 else:
                     print("[!] File is benign")
                     return None
