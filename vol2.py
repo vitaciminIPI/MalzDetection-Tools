@@ -70,7 +70,7 @@ VOLDATA = {}
 'windows.registry.userassist.UserAssist': <class 'volatility3.plugins.windows.registry.userassist.UserAssist'>}
 """
 
-def renderersEx(grid: interfaces.renderers.TreeGrid, pluginName):
+def renderersEx(grid: interfaces.renderers.TreeGrid):
     global VOLDATA
 
     if VOLDATA:
@@ -78,7 +78,7 @@ def renderersEx(grid: interfaces.renderers.TreeGrid, pluginName):
     
     # get the key
     for column in grid.columns:
-         VOLDATA[column.name] = []
+        VOLDATA[column.name] = []
     
     # visit node 
     def visitor(node: interfaces.renderers.TreeGrid, accumulator):
@@ -259,7 +259,7 @@ def run(pluginName, filePath, outputPath, argument):
     constructed = plugins.construct_plugin(context, automagics, plugin, base_config_path, progress_callback, cmds.file_handler_class_factory())
     treegrid = constructed.run()
     
-    renderersEx(grid=treegrid, pluginName=pluginName)
+    renderersEx(grid=treegrid)
 
     for key in VOLDATA.keys():
         if key == "Size" or key == "Base" or key == "Offset" or key == "HandleValue" or key == "GrantedAccess" or key == "Hive Offset" or key == "Offset(V)" or key == "Start VPN" or key == "End VPN":
