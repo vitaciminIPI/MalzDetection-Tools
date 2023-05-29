@@ -230,6 +230,9 @@ def run(pluginName, filePath, outputPath, argument):
     elif pluginName == "windows.cmdline.CmdLine":
         if argument:
             args.pid = [argument[0]]
+    elif pluginName == "windows.netstat.Netstat":
+         if argument:
+            args.include_corrupt = argument[0]
 
     plugin = plugin_list[args.plugin]
     chosen_configurables_list[args.plugin] = plugin
