@@ -298,6 +298,11 @@
             z-index: 9999;
             display: none;
         }
+
+        .disabled-section {
+            pointer-events: none;
+            opacity: 0;
+        }
     </style>
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -339,9 +344,8 @@
                         <br><a class="button" href="#section8">Windows.Dllist</a>
                         <br><a class="button" href="#section9">Windows.Handles</a>
                         <br><a class="button" href="#section10">Windows.Registy.Printkey</a>
-                        <br><a class="button" href="#section11">Windows.Filescan</a>
-                        <br><a class="button" href="#section12">Windows.Malfind</a>
-                        <br><a class="button" href="#section13">Windows.Cmdline</a>
+                        <br><a class="button" href="#section11">Windows.Malfind</a>
+                        <br><a class="button" href="#section12">Windows.Cmdline</a>
                     </nav>
                 </form>
                 <!-- <form name="my-form" id="my-form" action="#" method="post">
@@ -401,13 +405,12 @@
                 </section>
                 <section class="section" id="section4">
                     <h1>Windows.Pstree</h1>
-                    <p>User tagged process</p>
+                    <p>User tagged process tree</p>
                     <table id="reportTable">
                         <thead>
                             <tr>
                                 <th>CreateTime</th>
                                 <th>ExitTime</th>
-                                <th>File output</th>
                                 <th>Handles</th>
                                 <th>ImageFileName</th>
                                 <th>Offset(V)</th>
@@ -425,36 +428,27 @@
                 </section>
                 <section class="section" id="section5">
                     <h1>Windows.Psscan</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
+                    <p>User tagged process scan</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>CreateTime</th>
+                                <th>ExitTime</th>
+                                <th>File output</th>
+                                <th>Handles</th>
+                                <th>ImageFileName</th>
+                                <th>Offset(V)</th>
+                                <th>PID</th>
+                                <th>PPID</th>
+                                <th>SessionId</th>
+                                <th>Threads</th>
+                                <th>Wow64</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {PSSCAN_CONTENT}
+                        </tbody>
+                    </table>
                 </section>
                 <section class="section" id="section6">
                     <h1>Windows.Netstat</h1>
@@ -491,69 +485,47 @@
                 </section>
                 <section class="section" id="section7">
                     <h1>Windows.Netscan</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
+                    <p>User tagged netscan</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Created</th>
+                                <th>ForeignAddr</th>
+                                <th>ForeignPort</th>
+                                <th>LocalAddr</th>
+                                <th>LocalPort</th>
+                                <th>Offset</th>
+                                <th>Owner</th>
+                                <th>PID</th>
+                                <th>Proto</th>
+                                <th>State</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {NETSCAN_CONTENT}
+                        </tbody>
+                    </table>
                 </section>
                 <section class="section" id="section8">
                     <h1>Windows.Dllist</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
+                    <p>User tagged dlllist</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Base</th>
+                                <th>File output</th>
+                                <th>LoadTime</th>
+                                <th>Name</th>
+                                <th>PID</th>
+                                <th>Path</th>
+                                <th>Process</th>
+                                <th>Size</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {DLLLIST_CONTENT}
+                        </tbody>
+                    </table>
                 </section>
                 <section class="section" id="section9">
                     <h1>Windows.Handles</h1>
@@ -589,136 +561,64 @@
                         Repellendus harum aliquam sed omnis officiis.</p>
                 </section>
                 <section class="section" id="section10">
-                    <h1>Windows.Registy.Printkey</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
+                    <h1>Windows.Registry.Printkey</h1>
+                    <p>User tagged key</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Hive Offset</th>
+                                <th>Key</th>
+                                <th>Last Write Time</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Volatile</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {PRINTKEY_CONTENT}
+                        </tbody>
+                    </table>
                 </section>
                 <section class="section" id="section11">
-                    <h1>Windows.Filescan</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
+                    <h1>Windows.Malfind</h1>
+                    <p>User tagged malicious PID</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>CommitCharge</th>
+                                <th>Disasm</th>
+                                <th>End VPN</th>
+                                <th>File output</th>
+                                <th>Hexdump</th>
+                                <th>PID</th>
+                                <th>PrivateMemory</th>
+                                <th>Process</th>
+                                <th>Protection</th>
+                                <th>Start VPN</th>
+                                <th>Tag</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {MALFIND_CONTENT}
+                        </tbody>
+                    </table>
                 </section>
                 <section class="section" id="section12">
-                    <h1>Windows.Malfind</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
-                </section>
-                <section class="section" id="section13">
                     <h1>Windows.Cmdline</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
+                    <p>User tagged cmdline</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Args</th>
+                                <th>PID</th>
+                                <th>Process</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {CMDLINE_CONTENT}
+                        </tbody>
+                    </table>
                 </section>
             </nav>
             <footer style="height: 250px;"></footer>
@@ -737,6 +637,66 @@
         crossorigin="anonymous"></script>
 
     <script type="text/javascript">
+        window.onload = function () {
+            var section3Element = document.getElementById('section3');
+            var section3Content = section3Element.innerHTML;
+
+            var section4Element = document.getElementById('section4');
+            var section4Content = section4Element.innerHTML;
+
+            var section5Element = document.getElementById('section5');
+            var section5Content = section5Element.innerHTML;
+
+            var section7Element = document.getElementById('section7');
+            var section7Content = section7Element.innerHTML;
+
+            var section8Element = document.getElementById('section8');
+            var section8Content = section8Element.innerHTML;
+            
+            var section10Element = document.getElementById('section10');
+            var section10Content = section10Element.innerHTML;
+            
+            var section11Element = document.getElementById('section11');
+            var section11Content = section11Element.innerHTML;
+            
+            var section12Element = document.getElementById('section12');
+            var section12Content = section12Element.innerHTML;
+
+            // Cek apakah string 'kosong' terdapat di dalam konten section
+            if (section3Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section3Element.style.display = 'none';
+            }
+            if (section4Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section4Element.style.display = 'none';
+            }
+            if (section5Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section5Element.style.display = 'none';
+            }
+            if (section7Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section7Element.style.display = 'none';
+            }
+            if (section8Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section8Element.style.display = 'none';
+            }
+            if (section10Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section10Element.style.display = 'none';
+            }
+            if (section11Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section11Element.style.display = 'none';
+            }
+            if (section12Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section12Element.style.display = 'none';
+            }
+        };
+
         function showInput() {
             var pidField = document.getElementById("pid-field");
             var offsetField = document.getElementById("offset-field");
