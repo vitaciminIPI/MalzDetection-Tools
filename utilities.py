@@ -78,7 +78,6 @@ class UtilitiesMalz:
                                 print("//--> [*] Count : " + str(category["count"]))
                             
                             return True, malType
-                        return True, None
                     return False, None
                 else:
                     print("\\--> [!] Error")
