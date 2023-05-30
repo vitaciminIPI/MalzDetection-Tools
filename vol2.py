@@ -230,7 +230,7 @@ def run(pluginName, filePath, outputPath, argument):
     elif pluginName == "windows.cmdline.CmdLine":
         if argument:
             args.pid = [argument[0]]
-    elif pluginName == "windows.netstat.Netstat":
+    elif pluginName == "windows.netstat.NetStat":
          if argument:
             args.include_corrupt = argument[0]
 
