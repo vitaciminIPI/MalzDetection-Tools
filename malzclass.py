@@ -16,10 +16,6 @@ class MalwareAttributes(ABC):
         "sus_pid" : [],
         "hidden_pid" : [],
         "process_name" : [],
-        "is_network" : False,
-        "is_hidden_proc" : False,
-        "is_injected_code" : False,
-        "is_spoof" : False,
         "registry" : [],
         "exe_name" : [],
         "mod_name" : [],
@@ -28,7 +24,8 @@ class MalwareAttributes(ABC):
         "dict_dlllist" : {},
         "dict_cmdline" : {},
         "dict_handles" : {},
-        "dict_malfind" : {}
+        "dict_malfind" : {},
+        "iocs" : {}
     }
  
     registryKey = ["MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\WINLOGON", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE", "CURRENTCONTROLSET\\CONTROL\\HIVELIST", "CONTROLSET002\\CONTROL\\SESSION MANAGER", "CURRENTCONTROLSET\\SERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICESONCE", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\NOTIFY", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\USERINIT", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\SHELL"]
@@ -264,8 +261,6 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                             continue
 
                     maliciousList = ppidList + uniquePID
-                    
-                    print(maliciousList)
 
                     for pid in maliciousList:
                         self.maliciousData["sus_pid"].append(pid)
@@ -290,6 +285,7 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                     listCMD = {}
                     listDLL = {}
                     listHandles = {}
+                    listLdrMod = {}
                     print("[+] Getting all cmd arguments. . .")
 
                     for malz in maliciousList:
@@ -300,7 +296,7 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                         else:
                             for key in listCMD.keys():
                                 if key in cmdline:
-                                    listCMD[key].append(cmdline[key][0])
+                                    listCMD[key].extend(cmdline[key])
                     
                     self.maliciousData["dict_cmdline"] = listCMD
                     print("[+] Getting all DLL from malicious process. . .")
@@ -313,10 +309,33 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                         else:
                             for key in listDLL.keys():
                                 if key in dll:
-                                    listDLL[key].append(dll[key][0])
+                                    listDLL[key].extend(dll[key])
 
                     self.maliciousData["dict_dlllist"] = listDLL
 
+                    print("[+] Getting ldr modules. . .")
+
+                    # Check ldr modules
+                    for malz in maliciousList:
+                        ldrmod = v.run("windows.ldrmodules.LdrModules", self.filepath, self.outputpath, [malz]).copy()
+
+                        if not listLdrMod:
+                            listLdrMod.update(ldrmod)
+                        else:
+                            for key in listLdrMod.keys():
+                                if key in ldrmod:
+                                    listLdrMod[key].extend(ldrmod[key])
+                    
+                    # finding iocs in dlllist
+                    ldrModIOC = []
+                    for name in listLdrMod['MappedPath']:
+                        if "WannaCry" in name or "WanaDecryptor" in name or name.endswith(".mui") or "Tor" in name:
+                            ldrModIOC.append(name)
+                    
+                    if ldrModIOC:
+                        self.maliciousData['iocs']['ldrmod'] = ldrModIOC
+                    
+                    print(ldrModIOC)
                     print("[+] Getting all handles from malicious process. . .")
 
                     for malz in maliciousList:
@@ -327,9 +346,24 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                         else:
                             for key in listHandles.keys():
                                 if key in handles:
-                                    listHandles[key].append(handles[key][0])
+                                    listHandles[key].extend(handles[key])
 
                     self.maliciousData["dict_handles"] = listHandles
+                    
+                    # finding ioc in handles
+                    handleIOC = []
+
+                    for name in listHandles['Name']:
+                        if name.endswith('.eky') or name.endswith('.WNCRYT'):
+                            handleIOC.append(name)
+                        if name  == "MsWinZonesCacheCounterMutexA" or name == "MsWinZonesCacheCounterMutexA0":
+                            handleIOC.append(name)
+                        if "tor" in name:
+                            handleIOC.append(name)  
+
+                    if handleIOC:
+                        self.maliciousData['iocs']['handles'] = handleIOC
+
                     print("[+] Checking registry. . .")
 
                     for reg in self.registryKey:
@@ -344,8 +378,6 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                                     self.maliciousData["registry"].append(sublist)
                         except:
                             continue
-
-                    self.maliciousData["dict_handles"] = listHandles
 
                     newdirpath = self.createDirs(self.outputpath, "Exe")
 
@@ -372,6 +404,7 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                                         file_hash = self.getFileHash(file_path)
                                         print(f"Submit VT Progress : {count}/{file_count}")
                                         print(f"\-->[*] File Name : {file_name} ")
+                                        count += 1 
                                         ismal, typemalz = self.checksumVT(self.clientAPI, file_hash)
                                         if ismal:
                                             idx = pslist["PID"].index(pid)
@@ -477,7 +510,7 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                                             print(f"Submit VT Progress : {count}/{file_count}")
                                             print(f"\-->[*] File Name : {file_name} ")
                                             ismals, typeMals = self.checksumVT(self.clientAPI, file_hash)
-                                            
+                                            count += 1
                                             if ismals and typeMals:
                                                 malsPid.append(pid)
                                                 idx = pslist["PID"].index(pid)
