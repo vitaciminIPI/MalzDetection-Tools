@@ -36,6 +36,7 @@ def auto():
     if request.method == "POST":
         file = request.files['file']
         file_name = os.path.abspath(file.filename)
+        session["fileNameOri"] = file_name
         upload_directory = os.path.join(app.root_path)
         file_path = os.path.join(upload_directory, file_name)
         file.save(file_path)
@@ -48,24 +49,26 @@ def auto():
 @app.route('/generate_report', methods=['POST'])
 def generate_report():
     manDict = request.json
-    
+    # print(manDict)
 
     with open('templates/generateReport.html', 'r') as template_file:
         template_content = template_file.read()
-
+    # print(manDict['windows.info.Info']['layer_name'])
     # Isi template dengan konten yang diinginkan
     # Misalnya, Anda dapat menggunakan Jinja untuk mengganti placeholder dengan nilai yang diinginkan
     # Di sini, kita hanya akan mengganti placeholder {{ content }} dengan string "Ini adalah konten yang diinginkan"
-    html_content = template_content.replace('{{ name }}', 'wanncry.vmem')
-    html_content = html_content.replace('{{ size }}', '7 GB')
-    html_content = html_content.replace('{{ hash }}', '1h43556789')
-    html_content = html_content.replace('{{ optsys }}', 'Windows')
-    html_content = html_content.replace('{{ lname }}', 'Windows Intel')
-    html_content = html_content.replace('{{ lmemory }}', '1 File Layer')
-    html_content = html_content.replace('{{ proc }}', 'x64')
-    html_content = html_content.replace(
-        '{{ systime }}', '2023-06-16  02:25:51')
-    html_content = html_content.replace('{{ sysroot }}', 'c:\windows')
+
+    # Info =============================================================================================
+    info_data = manDict.get('windows.info.Info',{})
+    if 'windows.info.Info' in manDict and bool(info_data):
+        html_content = template_content.replace('{{ info }}', 'Memory File Information: ')
+        html_content = html_content.replace('{{ lname }}', manDict['windows.info.Info']['layer_name'][0])
+        html_content = html_content.replace('{{ lmemory }}', manDict['windows.info.Info']['memory_layer'][0])
+        html_content = html_content.replace(
+            '{{ systime }}', manDict['windows.info.Info']['SystemTime'][0])
+        html_content = html_content.replace('{{ sysroot }}', manDict['windows.info.Info']['NtSystemRoot'][0])
+    elif bool(info_data) == False:
+        html_content = template_content.replace('{{ info }}', 'kosong')
 
     # Pslist =============================================================================================
     pslist_data = manDict.get('windows.pslist.PsList',{})
@@ -142,6 +145,31 @@ def generate_report():
     elif bool(psscan_data) == False:
         html_content = html_content.replace('{PSSCAN_CONTENT}', 'kosong')
 
+    # Netstat =============================================================================================
+    netstat_data = manDict.get('windows.netstat.NetStat',{})
+    if 'windows.netstat.NetStat' in manDict and bool(netstat_data):
+        header1_values = None
+        for value in netstat_data.values():
+            if isinstance(value, list):
+                header1_values = value
+                break
+        num_header1_values = len(header1_values)
+        num_keys_key1 = len(netstat_data)
+        netstat_content = ''
+        for value in netstat_data.values():
+            counter = 0
+            netstat_row = '<tr>'
+            for indexval in range(num_header1_values):
+                if counter == 10:
+                    break
+                netstat_row += f'<td>{value[indexval]}</td>'
+                counter+=1
+            netstat_row += '</tr>'
+            netstat_content += netstat_row
+        html_content = html_content.replace('{NETSTAT_CONTENT}', netstat_content)
+    elif bool(netstat_data) == False:
+        html_content = html_content.replace('{NETSTAT_CONTENT}', 'kosong')
+
     # Netscan =============================================================================================
     netscan_data = manDict.get('windows.netscan.NetScan',{})
     if 'windows.netscan.NetScan' in manDict and bool(netscan_data):
@@ -192,6 +220,31 @@ def generate_report():
     elif bool(dlllist_data) == False:
         html_content = html_content.replace('{DLLLIST_CONTENT}', 'kosong')
     
+    # Handles =============================================================================================
+    handles_data = manDict.get('windows.handles.Handles',{})
+    if 'windows.handles.Handles' in manDict and bool(handles_data):
+        header1_values = None
+        for value in handles_data.values():
+            if isinstance(value, list):
+                header1_values = value
+                break
+        num_header1_values = len(header1_values)
+        num_keys_key1 = len(handles_data)
+        handles_content = ''
+        for value in handles_data.values():
+            counter = 0
+            handles_row = '<tr>'
+            for indexval in range(num_header1_values):
+                if counter == 7:
+                    break
+                handles_row += f'<td>{value[indexval]}</td>'
+                counter+=1
+            handles_row += '</tr>'
+            handles_content += handles_row
+        html_content = html_content.replace('{HANDLES_CONTENT}', handles_content)
+    elif bool(handles_data) == False:
+        html_content = html_content.replace('{HANDLES_CONTENT}', 'kosong')
+
     # Printkey =============================================================================================
     printkey_data = manDict.get('windows.registry.printkey.PrintKey',{})
     if 'windows.registry.printkey.PrintKey' in manDict and bool(printkey_data):
@@ -287,7 +340,36 @@ def generate_report():
 
     return response
 
-
+data = {
+        'info': {'header21': 'Value 21', 'header2': 'Value 2'},
+        'ipv4': ['83.212.99.68', '131.188.40.189', '204.11.50.131', '94.130.200.167'],
+        'dict_cmdline': {'PID': [2340, 2464, 1340, 1588, 2664, 2752, 2092], 
+                         'Process': ['@WanaDecryptor', 'WannaCry.EXE', 'explorer.exe', 'vmtoolsd.exe', 'taskmgr.exe', '@WanaDecryptor', 'taskhsvc.exe'], 
+                         'Args': ['@WanaDecryptor@.exe co', '"C:\\Users\\labib\\Desktop\\WannaCry.EXE" ', 'C:\\Windows\\Explorer.EXE', '"C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe" -n vmusr', '"C:\\Windows\\system32\\taskmgr.exe" /4', '@WanaDecryptor@.exe', 'TaskData\\Tor\\taskhsvc.exe']},
+        'hidden_pid': [1340, 2464, 2340],
+        'sus_pid': [2340, 2464, 1340, 1588, 2664, 2752, 2092],
+        'dict_dlllist':{'PID': [2340, 2340, 2340, 2340, 2340, 2464, 1340, 1588, 2664, 2752, 2092],
+                        'Process': ['@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', 'WannaCry.EXE', 'explorer.exe', 'vmtoolsd.exe', 'taskmgr.exe', '@WanaDecryptor', 'taskhsvc.exe'], 
+                        'Base': ['0x400000', '0x77200000', '0x74e90000', '0x74070000', '0x74ee0000', '0x400000', '0xfff90000', '0x13fda0000', '0xff0c0000', '0x400000', '0xaf0000'], 
+                        'Size': ['0x3d000', '0x1a9000', '0x3f000', '0x5c000', '0x8000', '0x35a000', '0x2c0000', '0x18000', '0x45000', '0x3d000', '0x2fe000'], 
+                        'Name': ['@WanaDecryptor@.exe', 'ntdll.dll', 'wow64.dll', 'wow64win.dll', 'wow64cpu.dll', 'WannaCry.EXE', 'Explorer.EXE', 'vmtoolsd.exe', 'taskmgr.exe', '@WanaDecryptor@.exe', 'taskhsvc.exe'], 
+                        'Path': ['C:\\Users\\labib\\Desktop\\@WanaDecryptor@.exe', 'C:\\Windows\\SYSTEM32\\ntdll.dll', 'C:\\Windows\\SYSTEM32\\wow64.dll', 'C:\\Windows\\SYSTEM32\\wow64win.dll', 'C:\\Windows\\SYSTEM32\\wow64cpu.dll', 'C:\\Users\\labib\\Desktop\\WannaCry.EXE', 'C:\\Windows\\Explorer.EXE', 'C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe', 'C:\\Windows\\system32\\taskmgr.exe', 'C:\\Users\\labib\\Desktop\\@WanaDecryptor@.exe', 'C:\\Users\\labib\\Desktop\\TaskData\\Tor\\taskhsvc.exe'], 
+                        'LoadTime': ['N/A', 'N/A', 'datetime.datetime(2021, 2, 22, 17, 52, 25)', 'datetime.datetime(2021, 2, 22, 17, 52, 25)', 'datetime.datetime(2021, 2, 22, 17, 52, 25)', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'], 
+                        'File output': ['Disabled', 'Disabled', 'Disabled', 'Disabled', 'Disabled', 'Disabled', 'Disabled', 'Disabled', 'Disabled', 'Disabled', 'Disabled']},
+        'dict_handles': 
+                        {'PID': [2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2340, 2464, 1340, 1588, 2664, 2752, 2092],
+                         'Process': ['@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', '@WanaDecryptor', 'WannaCry.EXE', 'explorer.exe', 'vmtoolsd.exe', 'taskmgr.exe', '@WanaDecryptor', 'taskhsvc.exe'], 
+                         'Offset': ['0xf8a002477f60', '0xf8a000325790', '0xf8a003683eb0', '0xfa8001f63d10', '0xf8a001744630', '0xf8a003683eb0', '0xfa8001b88b20', '0xfa80020ff750', '0xf8a0023dd250', '0xfa8001f69e60', '0xf8a002003060', '0xfa8001f5c990', '0xfa8002076dc0', '0xfa8001ebc630', '0xf8a002443a10', '0xfa8001b2d360', '0xfa8001dd2fb0', '0xfa8001fad490', '0xfa80019e0600', '0xfa8001a32d30', '0xfa80019e0600', '0xf8a001fa7e00', '0xfa8001e098d0', '0xfa80006f4cd0', '0xfa8001df4fe0', '0xfa8001e7d260', '0xfa8000b77c80', '0xfa8001adee90', '0xfa8000718270', '0xf8a001547eb0', '0xfa8001b8de20', '0xf8a001f6fb00', '0xfa8001dbbaf0', '0xfa8001b415b0', '0xfa80020f1640', '0xfa8001dbafb0', '0xfa8001bb99b0', '0xfa8000ffa4e0', '0xfa80020efeb0', '0xfa8001b3de50', '0xfa8001afa7c0', '0xfa8001bca8b0', '0xfa8001f9cbb0', '0xfa8000a4c960', '0xfa8000f91ca0', '0xf8a0017e1b90', '0xf8a00284ade0', '0xf8a001892750', '0xf8a002439680', '0xfa8000c57d50', '0xfa8001dfa4d0', '0xfa80019aa7d0', '0xf8a001d9d5a0', '0xfa8001e7d2f0', '0xf8a001589330', '0xfa800105a060', '0xfa8001ae0cb0', '0xf8a0026375a0', '0xfa8001ebf390', '0xf8a0026306f0', '0xfa8000fef5c0', '0xfa8001b56730', '0xfa80017ee830', '0xfa8002176140', '0xfa8002023e80', '0xfa80019a0a10', '0xf8a001d95ae0', '0xf8a001d28650', '0xf8a001dde4c0', '0xf8a001fc2500', '0xf8a0025536e0', '0xf8a00259da30'], 
+                         'HandleValue': ['0x4', '0x8', '0xc', '0x10', '0x14', '0x18', '0x1c', '0x20', '0x24', '0x28', '0x2c', '0x30', '0x34', '0x38', '0x3c', '0x40', '0x44', '0x48', '0x4c', '0x50', '0x54', '0x58', '0x5c', '0x60', '0x64', '0x68', '0x6c', '0x70', '0x74', '0x78', '0x7c', '0x80', '0x84', '0x88', '0x8c', '0x90', '0x94', '0x98', '0x9c', '0xa0', '0xa4', '0xa8', '0xac', '0xb0', '0xb4', '0xb8', '0xbc', '0xc0', '0xc4', '0xc8', '0xcc', '0xd0', '0xd4', '0xd8', '0xdc', '0xe0', '0xe4', '0xe8', '0xec', '0xf0', '0xf4', '0xf8', '0xfc', '0x100', '0x104', '0x108', '0x4', '0x4', '0x4', '0x4', '0x4', '0x4'], 
+                         'Type': ['Key', 'Directory', 'Directory', 'File', 'Key', 'Directory', 'File', 'File', 'Key', 'ALPC Port', 'Key', 'Semaphore', 'Semaphore', 'Mutant', 'Key', 'Event', 'EtwRegistration', 'Event', 'WindowStation', 'Desktop', 'WindowStation', 'Key', 'EtwRegistration', 'Event', 'Event', 'Event', 'Event', 'Event', 'Event', 'Directory', 'File', 'Key', 'File', 'EtwRegistration', 'EtwRegistration', 'EtwRegistration', 'EtwRegistration', 'EtwRegistration', 'EtwRegistration', 'EtwRegistration', 'EtwRegistration', 'EtwRegistration', 'EtwRegistration', 'EtwRegistration', 'ALPC Port', 'Section', 'Key', 'Key', 'Key', 'EtwRegistration', 'EtwRegistration', 'File', 'Section', 'File', 'Section', 'Thread', 'Event', 'Key', 'Event', 'Key', 'Event', 'File', 'File', 'IoCompletion', 'Event', 'Event', 'Key', 'Key', 'Key', 'Key', 'Key', 'Key'], 
+                         'GrantedAccess': ['0x9', '0x3', '0x3', '0x100020', '0x9', '0x3', '0x100020', '0x100020', '0x20019', '0x1f0001', '0x1', '0x100003', '0x100003', '0x1f0001', '0x20019', '0x1f0003', '0x804', '0x21f0003', '0xf037f', '0xf01ff', '0xf037f', '0x1', '0x804', '0x1f0003', '0x1f0003', '0x1f0003', '0x1f0003', '0x1f0003', '0x1f0003', '0xf', '0x120089', '0xf003f', '0x120089', '0x804', '0x804', '0x804', '0x804', '0x804', '0x804', '0x804', '0x804', '0x804', '0x804', '0x804', '0x1f0001', '0x4', '0x20019', '0x20019', '0x20019', '0x804', '0x804', '0x100020', '0x6', '0x120089', '0xf0005', '0x1fffff', '0x1f0003', '0x20019', '0x1f0003', '0x20019', '0x1f0003', '0x16019f', '0x212019f', '0x21f0003', '0x1f0003', '0x100003', '0x9', '0x9', '0x9', '0x9', '0x9', '0x9'], 
+                         'Name': ['MACHINE\\SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\IMAGE FILE EXECUTION OPTIONS', 'KnownDlls', 'KnownDlls32', '\\Device\\HarddiskVolume1\\Windows', 'MACHINE\\SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\IMAGE FILE EXECUTION OPTIONS', 'KnownDlls32', '\\Device\\HarddiskVolume1\\Users\\labib\\Desktop', '\\Device\\HarddiskVolume1\\Windows\\winsxs\\x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.7601.17514_none_41e6975e2bd6f2b2', 'MACHINE\\SYSTEM\\CONTROLSET001\\CONTROL\\NLS\\SORTING\\VERSIONS', '', 'MACHINE\\SYSTEM\\CONTROLSET001\\CONTROL\\SESSION MANAGER', '', '', '', 'MACHINE', '', '', '', 'WinSta0', 'Default', 'WinSta0', 'MACHINE\\SYSTEM\\CONTROLSET001\\CONTROL\\NLS\\CUSTOMLOCALE', '', '', '', '', '', '', '', 'BaseNamedObjects', '\\Device\\HarddiskVolume1\\Windows\\SysWOW64\\en-US\\odbcint.dll.mui', 'USER\\S-1-5-21-2222247560-3146130292-765576430-1000', '\\Device\\HarddiskVolume1\\Windows\\SysWOW64\\en-US\\MFC42.dll.mui', '', '', '', '', '', '', '', '', '', '', '', '', '', 'MACHINE\\SYSTEM\\CONTROLSET001\\CONTROL\\NLS\\LOCALE', 'MACHINE\\SYSTEM\\CONTROLSET001\\CONTROL\\NLS\\LOCALE\\ALTERNATE SORTS', 'MACHINE\\SYSTEM\\CONTROLSET001\\CONTROL\\NLS\\LANGUAGE GROUPS', '', '', '\\Device\\HarddiskVolume1\\Windows\\winsxs\\x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.7601.17514_none_41e6975e2bd6f2b2', 'windows_shell_global_counters', '\\Device\\HarddiskVolume1\\Windows\\Fonts\\StaticCache.dat', '', 'Tid 2280 Pid 2340', '', 'MACHINE\\SYSTEM\\CONTROLSET001\\SERVICES\\WINSOCK2\\PARAMETERS\\PROTOCOL_CATALOG9', '', 'MACHINE\\SYSTEM\\CONTROLSET001\\SERVICES\\WINSOCK2\\PARAMETERS\\NAMESPACE_CATALOG5', '', '\\Device\\Afd\\Endpoint', '\\Device\\Afd\\AsyncConnectHlp', '', '', '', 'MACHINE\\SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\IMAGE FILE EXECUTION OPTIONS', 'MACHINE\\SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\IMAGE FILE EXECUTION OPTIONS', 'MACHINE\\SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\IMAGE FILE EXECUTION OPTIONS', 'MACHINE\\SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\IMAGE FILE EXECUTION OPTIONS', 'MACHINE\\SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\IMAGE FILE EXECUTION OPTIONS', 'MACHINE\\SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\IMAGE FILE EXECUTION OPTIONS']},
+        'registry': 
+                        [['datetime.datetime(2021, 2, 16, 10, 6, 38)', '0xf8a0012f1010', 'REG_SZ',  '\\SystemRoot\\System32\\Config\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run', 'VMware VM3DService Process', '"C:\\Windows\\system32\\vm3dservice.exe" -u', False], ['datetime.datetime(2021, 2, 16, 10, 6, 38)', '0xf8a0012f1010', 'REG_SZ', '\\SystemRoot\\System32\\Config\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run', 'VMware User Process', '"C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe" -n vmusr', False]],
+        'pid': [2340, 2464, 2752],
+        'process_name': ['@WanaDecryptor', 'WannaCry.EXE', '@WanaDecryptor'],
+        'malware_types': ['ransomware.wanna/wannacryptor', 'trojan.wannacry/wannacryptor', 'trojan.wannacry/wannacryptor']
+    }
 @app.route('/processAuto', methods=['POST'])
 def process_formAuto():
     autoDict = {}
@@ -301,8 +383,132 @@ def process_formAuto():
         pass
     elif malware == "stuxnet":
         pass
-    print(autoDict)
-    html_content = generate_html(autoDict)
+    # print(autoDict)
+    with open('templates/generateReportAuto.html', 'r') as template_file:
+        template_content = template_file.read()
+    temp = str(autoDict['ipv4'])
+    temp = temp.replace('[', '').replace(']', '').replace('"', '')
+    html_content = template_content.replace('{IPV4}', temp)
+
+    cmdline_autoDict = autoDict.get('dict_cmdline', {})
+    cmdline_headers = ''
+    for key in cmdline_autoDict.keys():
+        if key == "Args":
+            continue
+        cmdline_headers += f'<th>{key}</th>'
+    cmdline_content = ''
+    index = 0
+    for value in cmdline_autoDict['PID']:
+            cmdline_row = '<tr>'
+            cmdline_row += f'<td>{value}</td>'
+            cmdline_row += f'<td>{cmdline_autoDict["Process"][index]}</td>'
+            cmdline_row += '</tr>'
+            cmdline_content += cmdline_row
+            index+=1
+    html_content = html_content.replace('{SUSPID_HEADER}', cmdline_headers)
+    html_content = html_content.replace('{SUSPID_CONTENT}', cmdline_content)
+
+    index = 0
+    hidpid_content = ''
+    for value in autoDict['hidden_pid']:
+        hidpid_row = '<tr>'
+        hidpid_row += f'<td>{autoDict["hidden_pid"][index]}</td>'
+        hidpid_row += '</tr>'
+        hidpid_content += hidpid_row
+        index+=1
+    html_content = html_content.replace('{HIDPID}', hidpid_content)
+
+    temp = str(autoDict['sus_pid'])
+    temp = temp.replace('[', '').replace(']', '').replace('"', '')
+    html_content = html_content.replace('{SUSPID}', temp)
+
+    dlllist_autoDict = autoDict.get('dict_dlllist', {})
+    dlllist_headers = ''
+    for key in dlllist_autoDict.keys():
+        dlllist_headers += f'<th>{key}</th>'
+    dlllist_content = ''
+    index = 0
+    for value in dlllist_autoDict['PID']:
+            dlllist_row = '<tr>'
+            dlllist_row += f'<td>{value}</td>'
+            dlllist_row += f'<td>{dlllist_autoDict["Process"][index]}</td>'
+            dlllist_row += f'<td>{dlllist_autoDict["Base"][index]}</td>'
+            dlllist_row += f'<td>{dlllist_autoDict["Size"][index]}</td>'
+            dlllist_row += f'<td>{dlllist_autoDict["Name"][index]}</td>'
+            dlllist_row += f'<td>{dlllist_autoDict["Path"][index]}</td>'
+            dlllist_row += f'<td>{dlllist_autoDict["LoadTime"][index]}</td>'
+            dlllist_row += f'<td>{dlllist_autoDict["File output"][index]}</td>'
+            dlllist_row += '</tr>'
+            dlllist_content += dlllist_row
+            index+=1
+    html_content = html_content.replace('{DLLLIST_HEADER}', dlllist_headers)
+    html_content = html_content.replace('{DLLLIST_CONTENT}', dlllist_content)
+
+    handles_autoDict = autoDict.get('dict_handles', {})
+    handles_headers = ''
+    for key in handles_autoDict.keys():
+        handles_headers += f'<th>{key}</th>'
+    handles_content = ''
+    index = 0
+    for value in handles_autoDict['PID']:
+            handles_row = '<tr>'
+            handles_row += f'<td>{value}</td>'
+            handles_row += f'<td>{handles_autoDict["Process"][index]}</td>'
+            handles_row += f'<td>{handles_autoDict["Offset"][index]}</td>'
+            handles_row += f'<td>{handles_autoDict["HandleValue"][index]}</td>'
+            handles_row += f'<td>{handles_autoDict["Type"][index]}</td>'
+            handles_row += f'<td>{handles_autoDict["GrantedAccess"][index]}</td>'
+            handles_row += f'<td>{handles_autoDict["Name"][index]}</td>'
+            handles_row += '</tr>'
+            handles_content += handles_row
+            index+=1
+    html_content = html_content.replace('{HANDLES_HEADER}', handles_headers)
+    html_content = html_content.replace('{HANDLES_CONTENT}', handles_content)
+
+    cmdline_autoDict = autoDict.get('dict_cmdline', {})
+    cmdline_headers = ''
+    for key in cmdline_autoDict.keys():
+        cmdline_headers += f'<th>{key}</th>'
+    cmdline_content = ''
+    index = 0
+    for value in cmdline_autoDict['PID']:
+            cmdline_row = '<tr>'
+            cmdline_row += f'<td>{value}</td>'
+            cmdline_row += f'<td>{cmdline_autoDict["Process"][index]}</td>'
+            cmdline_row += f'<td>{cmdline_autoDict["Args"][index]}</td>'
+            cmdline_row += '</tr>'
+            cmdline_content += cmdline_row
+            index+=1
+    html_content = html_content.replace('{CMDLINE_HEADER}', cmdline_headers)
+    html_content = html_content.replace('{CMDLINE_CONTENT}', cmdline_content)
+
+    registry_content = ''
+    index = 0
+    for value in autoDict['registry']:
+        registry_row = '<tr>'
+        angka = len(autoDict['registry'][0])
+        # print(autoDict['registry'][0][1])
+        for x in range(angka):
+            registry_row += f'<td>{autoDict["registry"][index][x]}</td>'
+        registry_row += '</tr>'
+        registry_content += registry_row
+        index+=1
+    html_content = html_content.replace('{REGISTRY_CONTENT}', registry_content)
+
+    summary_content = ''
+    index = 0
+    for value in autoDict['pid']:
+        summary_row = '<tr>'
+        summary_row += f'<td>{autoDict["pid"][index]}</td>'
+        summary_row += f'<td>{autoDict["process_name"][index]}</td>'
+        summary_row += f'<td>{autoDict["malware_types"][index]}</td>'
+        summary_row += '</tr>'
+        summary_content += summary_row
+        index+=1
+    html_content = html_content.replace('{SUMMARY_CONTENT}', summary_content)
+    # print(filePath)
+    fileNameOri = session.get('fileNameOri')
+    print(fileNameOri)
     tanggal_waktu_sekarang = datetime.now()
     deretan_angka = tanggal_waktu_sekarang.strftime('%Y-%m-%d_%H%M%S')
     # Menyimpan file HTML di folder /static/reports
