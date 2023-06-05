@@ -170,7 +170,7 @@
                         <option value="windows.pslist.PsList">windows.pslist</option>
                         <option value="windows.pstree.PsTree">windows.pstree</option>
                         <option value="windows.psscan.PsScan">windows.psscan</option>
-                        <option value="netstat">windows.netstat</option>
+                        <option value="windows.netstat.NetStat">windows.netstat</option>
                         <option value="windows.netscan.NetScan">windows.netscan</option>
                         <option value="windows.dlllist.DllList">windows.dlllist</option>
                         <option value="windows.handles.Handles">windows.handles</option>
@@ -278,7 +278,7 @@
             // Menunggu 3 detik
             setTimeout(function () {
                 loadingElement.style.display = 'none';
-            }, 10000);
+            }, 3000);
         }
 
         function showInput() {
@@ -310,7 +310,7 @@
                 keyField.style.display = "none";
                 recurseCheck.style.display = "none";
             }
-            if (command == "windows.netscan.NetScan" || command == "netstat") {
+            if (command == "windows.netscan.NetScan" || command == "windows.netstat.NetStat") {
                 includeCorrupt.style.display = "block";
             } else {
                 includeCorrupt.style.display = "none";
@@ -353,10 +353,10 @@
                 if (tempDict[i] == "Variable" && command == "windows.info.Info") {
                     counter = i;
                     break;
-                } else if (tempDict[i] == "row" && (command == "windows.netscan.NetScan" || command == "windows.dlllist.DllList" || command == "windows.registry.printkey.PrintKey" || command == "windows.malfind.Malfind")) {
+                } else if (tempDict[i] == "row" && (command == "windows.netscan.NetScan" || command == "windows.dlllist.DllList" || command == "windows.registry.printkey.PrintKey" || command == "windows.malfind.Malfind" || command == "windows.handles.Handles" || command == "windows.netstat.NetStat")) {
                     counter = i;
                     break;
-                } else if (tempDict[i] == "PID" && command != "windows.netscan.NetScan" && command != "windows.dlllist.DllList" && command != "windows.malfind.Malfind") {
+                } else if (tempDict[i] == "PID" && command != "windows.netscan.NetScan" && command != "windows.dlllist.DllList" && command != "windows.malfind.Malfind" && command != "windows.handles.Handles" &&  command != "windows.netstat.NetStat") {
                     counter = i;
                     break;
                 }
@@ -475,33 +475,44 @@
                         for (var j = 0; j < result["Variable"].length; j++) {
                             var tableBody = document.getElementById("tableBody");
                             var dataRow = document.createElement("tr");
+                            counter = 0
                             for (var key in result) {
-                                var dataCell = document.createElement("td");
-                                var dataText = document.createTextNode(result[key][j]);
-                                dataCell.appendChild(dataText);
-                                dataRow.appendChild(dataCell);
-                            }
-                            var tempkey = dataRow.children[indekskey].textContent;
-                            if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(tempkey)) {
-                                dataRow.classList.add("clicked-row");
+                                if (counter <= 1){
+                                    var dataCell = document.createElement("td");
+                                    var dataText = document.createTextNode(result[key][j]);
+                                    dataCell.appendChild(dataText);
+                                    dataRow.appendChild(dataCell);
+                                }
+                                counter++
                             }
                             tableBody.appendChild(dataRow);
-                            dataRow.addEventListener("click", function () {
-                                var key = this.children[indekskey].textContent;
-                                if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(key)) {
-                                    this.classList.add("clicked-row");
+                            var key = dataRow.children[indekskey].textContent;
+                            for (var i = 0; i < dataRow.cells.length; i++) {
+                                var value = dataRow.cells[i].textContent;
+                                if(value != key){
+                                    addToDictionary(commandsend, key, value);
                                 }
-                                if (!this.classList.contains("clicked-row")) {
-                                    for (var i = 0; i < dataRow.cells.length; i++) {
-                                        var value = this.cells[i].textContent;
-                                        addToDictionary(commandsend, key, value);
-                                    }
-                                    this.classList.add("clicked-row");
-                                } else {
-                                    removeFromDictionary(commandsend, key)
-                                    this.classList.remove("clicked-row");
-                                }
-                            });
+                            }
+                            console.log(dictionary)
+                            var tempkey = dataRow.children[indekskey].textContent;
+                            // if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(tempkey)) {
+                            //     dataRow.classList.add("clicked-row");
+                            // }
+                            // dataRow.addEventListener("click", function () {
+                            //     if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(key)) {
+                            //         this.classList.add("clicked-row");
+                            //     }
+                            //     if (!this.classList.contains("clicked-row")) {
+                            //         for (var i = 0; i < dataRow.cells.length; i++) {
+                            //             var value = this.cells[i].textContent;
+                            //             addToDictionary(commandsend, key, value);
+                            //         }
+                            //         this.classList.add("clicked-row");
+                            //     } else {
+                            //         removeFromDictionary(commandsend, key)
+                            //         this.classList.remove("clicked-row");
+                            //     }
+                            // });
                         }
                     }
                     else {
@@ -591,7 +602,7 @@
 
 
         function addToDictionary(command, key, value) {
-            // Memeriksa apakah key1 ada dalam dict
+            // console.log(dictionary)
             if (dictionary.hasOwnProperty(command)) {
                 // Memeriksa apakah key3 ada dalam key1
                 if (dictionary[command].hasOwnProperty(key)) {
@@ -607,6 +618,7 @@
         }
 
         function removeFromDictionary(command, key) {
+            console.log(dictionary)
             if (dictionary.hasOwnProperty(command)) {
                 // Memeriksa apakah key3 ada dalam key1
                 if (dictionary[command].hasOwnProperty(key)) {
