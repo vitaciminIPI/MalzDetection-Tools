@@ -205,8 +205,6 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                         if ad in maliciousIp:
                             indexOfMaliciousIP.append(temp.index(ad))
                     
-                    # print(f"idx of mals : {indexOfMaliciousIP}")
-
                     for idx in indexOfMaliciousIP:
                         index = netscan["PID"][idx]
                         maliciousPID.append(index)
@@ -543,90 +541,71 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                                             print(e)
 
                     if malsPid:
-                        listCMD = {}
-                        listDLL = {}
-                        listHandles = {}
+                        ssdt = v.run("windows.ssdt.SSDT", self.filepath, self.outputpath, []).copy()
+                        ssdtModule = ssdt['Module']                 
+                        self.maliciousData['ssdt'] = ssdt       
+                        self.maliciousData['iocs']['ssdt_module'] = []
+                        self.maliciousData['iocs']['ssdt_symbol'] = []
 
-                        print("[+] Getting all cmd arguments. . .")
-                        for pid in malsPid:
-                            cmdline = v.run("windows.cmdline.CmdLine", self.filepath, self.outputpath, [pid])
+                        for idx, mods in enumerate(ssdtModule):
+                            if "PROCMON" in mods and ssdt['Symbol'][idx] != "-":
+                                self.maliciousData['iocs']['ssdt_module'].append(mods)
+                                self.maliciousData['iocs']['ssdt_symbol'].append(ssdt['Symbol'][idx])
 
-                            if not listCMD:
-                                # saved cmdline
-                                listCMD.update(cmdline)
-                            else:
-                                for key in listCMD.keys():
-                                    if key in cmdline:
-                                        listCMD[key].append(cmdline[key][0])
+                        callbacks = v.run("windows.callbacks.Callbacks", self.filepath, self.outputpath, []).copy()
+                        cbModules = callbacks['Module']
+                        self.maliciousData['callbacks'] = callbacks
+                        cbMalMod = []
+ 
+                        for idx, mod in enumerate(cbModules):
+                            if mod == "mrxcls1":
+                                cbMalMod.append(mod)
                         
-                        self.maliciousData["dict_cmdline"] = listCMD
-
-                        print("[+] Getting all DLL from malicious process. . .")
-                        for pid in malsPid:
-                            dll = v.run("windows.dlllist.DllList", self.filepath, self.outputpath, [pid, False])
-                            
-                            if not listDLL:
-                                listDLL.update(dll)
-                            else:
-                                for key in listDLL.keys():
-                                    if key in dll:
-                                        listDLL[key].append(dll[key][0])
+                        if cbMalMod:
+                            self.maliciousData['iocs']['callbacks'] = cbMalMod
                         
-                        self.maliciousData["dict_dlllist"] = listDLL
+                        modules = v.run("windows.modules.Modules", self.filepath, self.outputpath, []).copy()
+                        modName = modules['Name']
+                        listMalMod = []
 
-                        print("[+] Getting all handles from malicious process. . .")
-                        for pid in malsPid:
-                            handles = v.run("windows.handles.Handles", self.filepath, self.outputpath, [pid])
+                        for name in modName:
+                            if "mrx" in name:
+                                listMalMod.append(name)
 
-                            if not listHandles:
-                                listHandles.update(handles)
-                            else:
-                                for key in listHandles.keys():
-                                    if key in handles:
-                                        listHandles[key].append(handles[key][0])
+                        if listMalMod:
+                            self.maliciousData['iocs']['stuxnet_modules'] = listMalMod
 
-                        self.maliciousData["dict_handles"] = listHandles
+                        # dump modules
+                        newdirpath = self.createDirs(self.outputpath, "Mod")
+                        v.run("windows.modules.Modules", self.filepath, newdirpath, [True])
 
-                        print("[+] Checking registry. . .")
+                        folder_path = newdirpath
+                        file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
+                        print("[+] Checking file to virus total")
+                        count = 1
 
-                        for reg in self.registryKey:
-                            try:
-                                printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, self.outputpath, [reg])
-                                typeLen = len(printkey["Type"])
+                        self.maliciousData['mod_name'] = []
 
-                                for i in range(typeLen):
-                                    if printkey["Type"][i] != "Key":
-                                        sublist = [printkey[key][i] for key in printkey.keys()]
-                                        self.maliciousData["registry"].append(sublist)
-                            except Exception as e:
-                                print(e)
-                            
-                        return self.maliciousData
-                        # newdirpath = self.createDirs(self.outputpath, "Mod")
-                        
-                        # dump
-                        # print("[*] Dumping modules")
-                        # v.run("windows.modules.Modules", self.filepath, newdirpath, [True])
-
-                        # folder_path = newdirpath
-                        # file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
-                        # print("[+] Checking file to virus total")
-                        # for file_name in os.listdir(folder_path):
-                        #     file_path = os.path.join(folder_path, file_name)
-                        #     if os.path.isfile(file_path):
-                        #         if file_count >= 5:
-                        #             sleep(15)
-                        #         if not file_name.startswith("."):
-                        #             try:
-                        #                 file_hash = self.getFileHash(file_path)
-                        #                 print(f"\-->[*] File Name : {file_name} ")
-                        #                 ismal, typemalz = self.checksumVT(self.clientAPI, file_hash)
-
-                        #                 if ismal and typemalz:
-                        #                     self.maliciousData['malware_types'] = typemalz
-                        #                     self.maliciousData['mod_name'].append(file_name)
-                        #             except Exception as e:
-                        #                 print(e)
+                        for file_name in os.listdir(folder_path):
+                            file_path = os.path.join(folder_path, file_name)
+                            if os.path.isfile(file_path):
+                                for name in modName:
+                                    if name in file_name:
+                                        if file_count >= 5:
+                                            sleep(15)
+                                        if not file_name.startswith("."):
+                                            try:
+                                                file_hash = self.getFileHash(file_path)
+                                                print(f"Submit VT Progress : {count}/{file_count}")
+                                                print(f"\-->[*] File Name : {file_name} ")
+                                                ismals, typeMals = self.checksumVT(self.clientAPI, file_hash)
+                                                count += 1
+                                                if ismals and typeMals:
+                                                    self.maliciousData["mod_name"].append(file_name)
+                                                    self.maliciousData["malware_types"].append(typeMals)
+                                            except Exception as e:
+                                                print(e)
+                    return self.maliciousData
                 else:
                     print("[!] File is benign")
                     return None

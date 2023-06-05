@@ -87,7 +87,7 @@ def renderersEx(grid: interfaces.renderers.TreeGrid):
         for key in VOLDATA.keys():
             if objecttest[index].__class__.__name__ == "NotApplicableValue":
                 VOLDATA[key].append("N/A")
-            elif objecttest[index].__class__.__name__ == "UnreadableValue" or objecttest[index].__class__.__name__ == "UnparsableValue" :
+            elif objecttest[index].__class__.__name__ == "UnreadableValue" or objecttest[index].__class__.__name__ == "UnparsableValue" or objecttest[index].__class__.__name__ == "NotAvailableValue":
                 VOLDATA[key].append("-")
             else:
                 VOLDATA[key].append(objecttest[index])
@@ -233,6 +233,13 @@ def run(pluginName, filePath, outputPath, argument):
     elif pluginName == "windows.netstat.NetStat":
          if argument:
             args.include_corrupt = argument[0]
+    elif pluginName == "windows.ldrmodules.LdrModules":
+        if argument:
+            args.pid = [argument[0]]
+    elif pluginName == "windows.modules.Modules":
+         if argument:
+              args.dump == True
+    
 
     plugin = plugin_list[args.plugin]
     chosen_configurables_list[args.plugin] = plugin
@@ -265,7 +272,7 @@ def run(pluginName, filePath, outputPath, argument):
     renderersEx(grid=treegrid)
 
     for key in VOLDATA.keys():
-        if key == "Size" or key == "Base" or key == "Offset" or key == "HandleValue" or key == "GrantedAccess" or key == "Hive Offset" or key == "Offset(V)" or key == "Start VPN" or key == "End VPN":
+        if key == "Size" or key == "Base" or key == "Offset" or key == "HandleValue" or key == "GrantedAccess" or key == "Hive Offset" or key == "Offset(V)" or key == "Start VPN" or key == "End VPN" or key == "Callback" or key == "Address":
             intToHex(VOLDATA[key])
         elif key == "Data":
             byteToString(VOLDATA[key])
