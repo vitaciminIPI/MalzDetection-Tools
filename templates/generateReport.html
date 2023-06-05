@@ -334,7 +334,6 @@
                 <form name="my-form" id="my-form" action="#" method="post">
                     <h4 class="mx-1 my-3">AutoVolt Analysis Report</h4>
                     <nav id="#reportSec">
-                        <br><a class="button" href="#section1">Case Summary</a>
                         <br><a class="button" href="#section2">Windows.Info</a>
                         <br><a class="button" href="#section3">Windows.Pslist</a>
                         <br><a class="button" href="#section4">Windows.Pstree</a>
@@ -364,18 +363,10 @@
                 <i class="fas fa-align-justify"></i>
             </button>
             <nav>
-                <section class="section" id="section1">
-                    <h1>Case Summary</h1>
-                    <p>Name: {{ name }}</p>
-                    <p>Size Memory: {{ size }}</p>
-                    <p>Hash: {{ hash }}</p>
-                    <p>Operation System: {{ optsys }}</p>
-                </section>
                 <section class="section" id="section2">
-                    <h1>Information Windows</h1>
+                    <h1>{{ info }}</h1>
                     <p>Layer Name: {{ lname }}</p>
                     <p>Layer Memory: {{ lmemory }}</p>
-                    <p>Processor: {{ proc }}</p>
                     <p>System Time: {{ systime }}</p>
                     <p>System Root: {{ sysroot }}</p>
                 </section>
@@ -452,36 +443,26 @@
                 </section>
                 <section class="section" id="section6">
                     <h1>Windows.Netstat</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
+                    <p>User tagged netstat</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Created</th>
+                                <th>ForeignAddr</th>
+                                <th>ForeignPort</th>
+                                <th>LocalAddr</th>
+                                <th>LocalPort</th>
+                                <th>Offset</th>
+                                <th>Owner</th>
+                                <th>PID</th>
+                                <th>Proto</th>
+                                <th>State</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {NETSTAT_CONTENT}
+                        </tbody>
+                    </table>
                 </section>
                 <section class="section" id="section7">
                     <h1>Windows.Netscan</h1>
@@ -529,36 +510,23 @@
                 </section>
                 <section class="section" id="section9">
                     <h1>Windows.Handles</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem autem tempora deleniti
-                        adipisci perferendis inventore mollitia quis dolore vero itaque numquam pariatur minus minima
-                        modi, eos repellat, ab alias qui?
-                        Non obcaecati laboriosam neque quod corporis, placeat quos magnam commodi maiores quas, eos
-                        debitis, eaque veniam inventore optio perferendis! Doloribus odit tenetur provident natus amet
-                        cum culpa eos, nihil facere?
-                        Eaque illum odit molestias doloremque fugiat nesciunt, sunt debitis saepe. Dolorem porro nulla
-                        fugiat vel temporibus aut aliquam, autem praesentium cum voluptatibus consequuntur obcaecati
-                        nesciunt cumque ex at quia ipsum.
-                        Impedit omnis itaque suscipit, at deleniti eaque magni rem. Obcaecati ullam in quo? Obcaecati
-                        quibusdam laboriosam vitae animi rerum at suscipit. Nesciunt cum sequi error voluptatum
-                        voluptates voluptatibus dignissimos vero?
-                        Nihil odit aperiam repellendus voluptatum autem harum corrupti modi a, ipsa officiis ab
-                        recusandae sed ex. Quis nobis asperiores eligendi dolores ea consequatur quaerat obcaecati
-                        voluptates magni, ex, cum maxime?
-                        Expedita praesentium et, voluptatem nam explicabo quidem iste omnis laborum at? Mollitia nisi
-                        quis labore reprehenderit maiores magni repudiandae reiciendis sequi optio praesentium saepe
-                        laudantium natus, fugit vero, dolorem quaerat.
-                        Quam sapiente repellendus molestiae nam deserunt cupiditate optio sequi, rerum est atque omnis
-                        fugit delectus incidunt. Quisquam minus tenetur corrupti accusantium, laudantium libero quaerat,
-                        doloribus reprehenderit id, aut quasi animi?
-                        A incidunt praesentium illo voluptates reprehenderit, tempore voluptatem dolorum est esse
-                        repudiandae nostrum rem vitae accusamus consequuntur rerum? Sunt accusamus nemo ratione esse
-                        beatae perspiciatis mollitia vero. Quod, repellat debitis.
-                        Vel delectus quod sed vitae dolores odit qui voluptate saepe rem incidunt, praesentium beatae
-                        voluptas, rerum autem architecto numquam molestias similique. Soluta cumque et sapiente
-                        repellendus quibusdam distinctio fugiat dolores?
-                        Veniam, laudantium tempora deserunt asperiores autem neque expedita dolore molestias? A placeat
-                        labore, optio aspernatur, quas ipsam eligendi tempora dolor cumque amet eveniet voluptatem.
-                        Repellendus harum aliquam sed omnis officiis.</p>
+                    <p>User tagged handles</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>GrantedAccess</th>
+                                <th>HandleValue</th>
+                                <th>Name</th>
+                                <th>Offset</th>
+                                <th>PID</th>
+                                <th>Process</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {HANDLES_CONTENT}
+                        </tbody>
+                    </table>
                 </section>
                 <section class="section" id="section10">
                     <h1>Windows.Registry.Printkey</h1>
@@ -638,6 +606,9 @@
 
     <script type="text/javascript">
         window.onload = function () {
+            var section2Element = document.getElementById('section2');
+            var section2Content = section2Element.innerHTML;
+
             var section3Element = document.getElementById('section3');
             var section3Content = section3Element.innerHTML;
 
@@ -646,6 +617,9 @@
 
             var section5Element = document.getElementById('section5');
             var section5Content = section5Element.innerHTML;
+            
+            var section6Element = document.getElementById('section6');
+            var section6Content = section6Element.innerHTML;
 
             var section7Element = document.getElementById('section7');
             var section7Content = section7Element.innerHTML;
@@ -653,6 +627,9 @@
             var section8Element = document.getElementById('section8');
             var section8Content = section8Element.innerHTML;
             
+            var section9Element = document.getElementById('section9');
+            var section9Content = section9Element.innerHTML;
+
             var section10Element = document.getElementById('section10');
             var section10Content = section10Element.innerHTML;
             
@@ -662,7 +639,10 @@
             var section12Element = document.getElementById('section12');
             var section12Content = section12Element.innerHTML;
 
-            // Cek apakah string 'kosong' terdapat di dalam konten section
+            if (section2Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section2Element.style.display = 'none';
+            }
             if (section3Content.includes('kosong')) {
                 // Jika terdapat, hilangkan section tersebut
                 section3Element.style.display = 'none';
@@ -675,6 +655,10 @@
                 // Jika terdapat, hilangkan section tersebut
                 section5Element.style.display = 'none';
             }
+            if (section6Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section6Element.style.display = 'none';
+            }
             if (section7Content.includes('kosong')) {
                 // Jika terdapat, hilangkan section tersebut
                 section7Element.style.display = 'none';
@@ -682,6 +666,10 @@
             if (section8Content.includes('kosong')) {
                 // Jika terdapat, hilangkan section tersebut
                 section8Element.style.display = 'none';
+            }
+            if (section9Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section9Element.style.display = 'none';
             }
             if (section10Content.includes('kosong')) {
                 // Jika terdapat, hilangkan section tersebut
@@ -696,7 +684,7 @@
                 section12Element.style.display = 'none';
             }
         };
-
+        
         function showInput() {
             var pidField = document.getElementById("pid-field");
             var offsetField = document.getElementById("offset-field");
@@ -706,7 +694,7 @@
             var includeCorrupt = document.getElementById("include-corrupt");
             var recurseCheck = document.getElementById("recurse");
             var command = document.getElementById("command").value;
-
+            
             if (command == "pslist" || command == "pstree" || command == "psscan" || command == "dlllist" || command == "handles" || command == "malfind" || command == "cmdline") {
                 pidField.style.display = "block";
             } else {
