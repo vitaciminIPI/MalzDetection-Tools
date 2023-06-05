@@ -68,7 +68,7 @@ class Emotet(MalwareAttributes, UtilitiesMalz):
                         if ad in maliciousIp:
                             indexOfMaliciousIP.append(temp.index(ad))
                     
-                    print(f"idx of mals : {indexOfMaliciousIP}")
+                    # print(f"idx of mals : {indexOfMaliciousIP}")
 
                     for idx in indexOfMaliciousIP:
                         index = netscan["PID"][idx]
@@ -205,7 +205,7 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                         if ad in maliciousIp:
                             indexOfMaliciousIP.append(temp.index(ad))
                     
-                    print(f"idx of mals : {indexOfMaliciousIP}")
+                    # print(f"idx of mals : {indexOfMaliciousIP}")
 
                     for idx in indexOfMaliciousIP:
                         index = netscan["PID"][idx]
@@ -335,7 +335,23 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                     if ldrModIOC:
                         self.maliciousData['iocs']['ldrmod'] = ldrModIOC
                     
-                    print(ldrModIOC)
+                    # finding filescan
+
+                    print("[+] Scanning file objects")
+                    filescan = v.run("windows.filescan.FileScan", self.filepath, self.outputpath, [])
+                    fileName = filescan['Name']
+                    filescanIOC = []
+                    self.maliciousData['iocs']['wanna_file'] = []
+
+                    for name in fileName:
+                        if "WNCRY" in name or "tor\\lock" in name or ".eky" in name:
+                            if "WNCRY" in name:
+                                self.maliciousData['iocs']['wanna_file'].append(name)
+                            filescanIOC.append(name)
+                    
+                    if filescanIOC:
+                        self.maliciousData['iocs']['filescan'] = filescanIOC
+                    
                     print("[+] Getting all handles from malicious process. . .")
 
                     for malz in maliciousList:
@@ -352,13 +368,17 @@ class WannaCry(MalwareAttributes, UtilitiesMalz):
                     
                     # finding ioc in handles
                     handleIOC = []
-
+                    self.maliciousData['iocs']['mutex'] = []
+                    self.maliciousData['iocs']['wanna_path'] = []
+                    
                     for name in listHandles['Name']:
                         if name.endswith('.eky') or name.endswith('.WNCRYT'):
                             handleIOC.append(name)
                         if name  == "MsWinZonesCacheCounterMutexA" or name == "MsWinZonesCacheCounterMutexA0":
+                            self.maliciousData['iocs']['mutex'].append(name)
                             handleIOC.append(name)
-                        if "tor" in name:
+                        if "tor\\lock" in name:
+                            self.maliciousData['iocs']['wanna_path'].append(name)
                             handleIOC.append(name)  
 
                     if handleIOC:

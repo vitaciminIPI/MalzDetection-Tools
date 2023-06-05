@@ -76,6 +76,8 @@ class UtilitiesMalz:
                             for category in threatCategory:
                                 print("//--> [*] Category : " + category["value"])
                                 print("//--> [*] Count : " + str(category["count"]))
+                            print()
+                            print()
                             
                             return True, malType
                     return False, None
