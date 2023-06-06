@@ -223,9 +223,7 @@ class UtilitiesMalz:
         ppidlist = pslist['PPID']
 
         idxPid = []
-        print(ppidlist)
         for idx, ppid in enumerate(ppidlist):
-            # print(pid)
             if ppid == pid:
                 idxPid.append(idx)
 

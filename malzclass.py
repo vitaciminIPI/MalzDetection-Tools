@@ -541,6 +541,7 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                                             print(e)
 
                     if malsPid:
+                        print("[+] Checking SSDT")
                         ssdt = v.run("windows.ssdt.SSDT", self.filepath, self.outputpath, []).copy()
                         ssdtModule = ssdt['Module']                 
                         self.maliciousData['ssdt'] = ssdt       
@@ -552,6 +553,8 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                                 self.maliciousData['iocs']['ssdt_module'].append(mods)
                                 self.maliciousData['iocs']['ssdt_symbol'].append(ssdt['Symbol'][idx])
 
+
+                        print("[+] Checking Callbacks")
                         callbacks = v.run("windows.callbacks.Callbacks", self.filepath, self.outputpath, []).copy()
                         cbModules = callbacks['Module']
                         self.maliciousData['callbacks'] = callbacks
@@ -564,6 +567,7 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                         if cbMalMod:
                             self.maliciousData['iocs']['callbacks'] = cbMalMod
                         
+                        print("[+] Checking Modules")
                         modules = v.run("windows.modules.Modules", self.filepath, self.outputpath, []).copy()
                         modName = modules['Name']
                         listMalMod = []
@@ -589,22 +593,22 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                         for file_name in os.listdir(folder_path):
                             file_path = os.path.join(folder_path, file_name)
                             if os.path.isfile(file_path):
-                                for name in modName:
-                                    if name in file_name:
-                                        if file_count >= 5:
-                                            sleep(15)
-                                        if not file_name.startswith("."):
-                                            try:
-                                                file_hash = self.getFileHash(file_path)
-                                                print(f"Submit VT Progress : {count}/{file_count}")
-                                                print(f"\-->[*] File Name : {file_name} ")
-                                                ismals, typeMals = self.checksumVT(self.clientAPI, file_hash)
-                                                count += 1
-                                                if ismals and typeMals:
-                                                    self.maliciousData["mod_name"].append(file_name)
-                                                    self.maliciousData["malware_types"].append(typeMals)
-                                            except Exception as e:
-                                                print(e)
+                                print(f"[+] File Name : {file_name} {count}/{file_count}")
+                                if file_count >= 5:
+                                    sleep(15)
+                                if not file_name.startswith(".") and "mrx" in file_name:
+                                    try:
+                                        file_hash = self.getFileHash(file_path)
+                                        print(f"Submit VT Progress : {count}/{file_count}")
+                                        print(f"\-->[*] File Name : {file_name} ")
+                                        ismals, typeMals = self.checksumVT(self.clientAPI, file_hash)
+                                        
+                                        if ismals and typeMals:
+                                            self.maliciousData["mod_name"].append(file_name)
+                                            self.maliciousData["malware_types"].append(typeMals)
+                                    except Exception as e:
+                                        print(e)
+                                count += 1
                     return self.maliciousData
                 else:
                     print("[!] File is benign")
@@ -713,12 +717,13 @@ class MetasPreter(MalwareAttributes, UtilitiesMalz):
                     # maliciousPidList = [704, 3732]
                     idxChild = []
 
-                    print(f"maliciouspidlist : {maliciousPidList}")
+                    # print(f"maliciouspidlist : {maliciousPidList}")
 
                     pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, []).copy()
                     listPPID = pslist['PPID']
                     lenlistPPID = len(listPPID)
                     pidPsList = pslist['PID']
+                    malzChildPid = []
 
                     print("[+] Get child")
                     
@@ -733,9 +738,11 @@ class MetasPreter(MalwareAttributes, UtilitiesMalz):
                     print("[+] Get child pid from pslist")
                     for idx in idxChild:
                         pid = pidPsList[idx]
+                        malzChildPid.append(pid)
                         maliciousPidList.append(pid)
 
-                    print(f"malicious pidlist {maliciousPidList}")
+                    if malzChildPid:
+                        self.maliciousData['reverse_shell'] = malzChildPid
 
                     # get parent
                     ppidList = []
@@ -835,78 +842,30 @@ class MetasPreter(MalwareAttributes, UtilitiesMalz):
 
                         netscan = v.run("windows.netscan.NetScan", self.filepath, newdirpath, []).copy()
                         netPort = netscan['ForeignPort']
-                        
+                        netStat = netscan['State']
+                        netForeign = netscan['ForeignAddr']
+                        metas_port_idx = 0
+
                         print("[+] Checking Foreign Port")
-                        metas_port = [port for port in netPort if port == 4444]
-                        
-                        if metas_port:
-                            self.maliciousData['metas_port'] = metas_port[0]
+                        for idx, port in enumerate(netPort):
+                            if port == 4444:
+                                metas_port_idx = idx        
+                        # metas_port_idx = [idx for idx, port in netPort if port == 4444]
+                        # print(metas_port)
+                        if metas_port_idx:
+                            metas_port = netPort[metas_port_idx]
+                            metas_state = netStat[metas_port_idx]
+                            metas_connectAddr = netForeign[metas_port_idx]
+
+                            self.maliciousData['metas_port'] = metas_port
+                            self.maliciousData['metas_tcp_state'] = metas_state
+                            self.maliciousData['metas_connect'] = metas_connectAddr
                         
                         print("[+] Checking Foreign Address")
                         maliciousIp = self.checkNetwork(netscan, self.clientAPI)
 
                         if maliciousIp:
                             self.maliciousData['ipv4'] = maliciousIp
-
-                        listCMD = {}
-                        # listDLL = {}
-                        # listHandles = {}
-                        print("[+] Getting all cmd arguments. . .")
-
-                        for malz in hitPid:
-                            cmdline = v.run("windows.cmdline.CmdLine", self.filepath, newdirpath, [malz]).copy()
-                            
-                            if not listCMD:
-                                listCMD.update(cmdline)
-                            else:
-                                for key in listCMD.keys():
-                                    if key in cmdline:
-                                        listCMD[key].append(cmdline[key][0])
-                        
-                        self.maliciousData["dict_cmdline"] = listCMD
-                        # print("[+] Getting all DLL from malicious process. . .")
-
-                        # for malz in hitPid:
-                        #     dll = v.run("windows.dlllist.DllList", self.filepath, newdirpath, [malz, False]).copy()
-                            
-                        #     if not listDLL:
-                        #         listDLL.update(dll)
-                        #     else:
-                        #         for key in listDLL.keys():
-                        #             if key in dll:
-                        #                 listDLL[key].append(dll[key][0])
-
-                        # self.maliciousData["dict_dlllist"] = listDLL
-
-                        # print("[+] Getting all handles from malicious process. . .")
-
-                        # for malz in hitPid:
-                        #     handles = v.run("windows.handles.Handles", self.filepath, newdirpath, [malz]).copy()
-
-                        #     if not listHandles:
-                        #         listHandles.update(handles)
-                        #     else:
-                        #         for key in listHandles.keys():
-                        #             if key in handles:
-                        #                 listHandles[key].append(handles[key][0])
-
-                        # self.maliciousData["dict_handles"] = listHandles
-                        # print("[+] Checking registry. . .")
-
-                        # for reg in self.registryKey:
-                        #     try:
-                        #         printkey = v.run("windows.registry.printkey.PrintKey", self.filepath, newdirpath, [reg]).copy()
-
-                        #         typeLen = len(printkey["Type"])
-
-                        #         for i in range(typeLen):
-                        #             if printkey["Type"][i] != "Key":
-                        #                 sublist = [printkey[key][i] for key in printkey.keys()]
-                        #                 self.maliciousData["registry"].append(sublist)
-                        #     except:
-                        #         continue
-
-                        # self.maliciousData["dict_handles"] = listHandles
                         
                 return self.maliciousData
 
