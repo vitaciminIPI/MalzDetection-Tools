@@ -609,6 +609,27 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                                     except Exception as e:
                                         print(e)
                                 count += 1
+                        
+                        newdirpath = self.createDirs(self.outputpath, "Mal")
+
+                        print("[+] Dumping injected code")
+
+                        for pid in malsPid:
+                            print(f"Dumping {pid}")
+                            v.run("windows.malfind.Malfind", self.filepath, newdirpath, [pid, True])
+
+                        folder_path = newdirpath
+                        file_count = len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))])
+
+                        count = 1
+
+                        for file_name in os.listdir(folder_path):
+                            file_path = os.path.join(folder_path, file_name)
+                            if os.path.isfile(file_path):
+                                print(f"[+] File Name : {file_name} {count}/{file_count}")
+                                self.maliciousData['exe_name'] = file_name
+                            count += 1
+
                     return self.maliciousData
                 else:
                     print("[!] File is benign")
@@ -826,9 +847,10 @@ class MetasPreter(MalwareAttributes, UtilitiesMalz):
 
                                         if ismal:
                                             hitPid.append(pid)
-                                            self.maliciousData['pid'].append(pidstr)
-                                            self.maliciousData['malware_types'] = typemalz
-                                            self.maliciousData['exe_name'].append(file_name)
+                                            if pid not in self.maliciousData['pid']:
+                                                self.maliciousData['pid'].append(pidstr)
+                                                self.maliciousData['malware_types'] = typemalz
+                                                self.maliciousData['exe_name'].append(file_name)
                     
                     # kalo ada hit pid
                     # Volatility analysis
