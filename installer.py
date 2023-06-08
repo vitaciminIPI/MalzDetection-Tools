@@ -32,6 +32,8 @@ def main():
     flushScreen()
     upper = "```````````````````````````````````````````````````````````````````````````````````````````````````````"
     bottom = "```````````````````````````````````````````````````````````````````````````````````````````````````````"
+    message = "<<<<<<<<<<<<<<<<<<< Memory Analysis GUI Tools Based On Volatility 3 Framework >>>>>>>>>>>>>>>>>>>>>>>>"
+    message2 = "<<<<<<<<<<<<<<<<<<<<<<<<<<<< Easy Installation And Easy To Use >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     banner = """
         .?77?!    ~?7?:  :?7?~!?77777777J~ .~77???7!: .J777    !?7J: :!7???77!:  :?7?!    :J77777777??  
         ?J7J!Y~   ?J!Y^  ^Y!J7~?77Y77Y77?^~J7??7!?J7J7 7J!Y!  ~Y!J7 7J7??!!??7J! :Y!??    .?77J?!J?777  
@@ -50,7 +52,12 @@ def main():
     print(f"{Fore.RED} {upper}")
     print(f"{Fore.BLUE} {Style.DIM} {banner}")
     print(f"{Fore.RED} {bottom}")
-
+    print(f"{Fore.LIGHTGREEN_EX} {message}")
+    print(f"{Fore.LIGHTGREEN_EX} {message2}")
+    print(f"{Fore.LIGHTBLUE_EX} Framework\t: AutoVolt")
+    print(f"{Fore.LIGHTBLUE_EX} Version\t: 1.0")
+    print("")
+    print("")
 
     print(f"{Fore.LIGHTGREEN_EX} Do you want to install AutoVolt? [y/N]")
     inp = input(f"{Fore.LIGHTGREEN_EX} >")
