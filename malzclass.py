@@ -719,7 +719,7 @@ class MetasPreter(MalwareAttributes, UtilitiesMalz):
                             pidstr = str(pid)    
                             if pidstr in file_name:
                                 if file_count >= 5:
-                                    sleep(15)
+                                    sleep(16)
                                 if not file_name.startswith("."):
                                     file_hash = self.getFileHash(file_path)
                                     print(f"Submit VT Progress : {count}/{file_count}")
@@ -728,10 +728,11 @@ class MetasPreter(MalwareAttributes, UtilitiesMalz):
                                     count +=1 
 
                                     if ismal:
-                                        maliciousPidList.append(pid)
-                                        self.maliciousData['pid'].append(pidstr)
-                                        self.maliciousData['malware_types'] = typemalz
-                                        self.maliciousData['injected_code'].append(file_name)
+                                        if pidstr not in self.maliciousData['pid']:
+                                            maliciousPidList.append(pid)
+                                            self.maliciousData['pid'].append(pidstr)
+                                            self.maliciousData['malware_types'] = typemalz
+                                            self.maliciousData['injected_code'].append(file_name)
 
                 if maliciousPidList:
                     # yang hit dari vt = 704, 3732
@@ -847,7 +848,7 @@ class MetasPreter(MalwareAttributes, UtilitiesMalz):
 
                                         if ismal:
                                             hitPid.append(pid)
-                                            if pid not in self.maliciousData['pid']:
+                                            if pidstr not in self.maliciousData['pid']:
                                                 self.maliciousData['pid'].append(pidstr)
                                                 self.maliciousData['malware_types'] = typemalz
                                                 self.maliciousData['exe_name'].append(file_name)
