@@ -570,7 +570,7 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                         
                         print("[+] Checking Modules")
                         modules = v.run("windows.modules.Modules", self.filepath, self.outputpath, []).copy()
-                        self.maliciousData['modules']
+                        self.maliciousData['modules'] = modules
                         modName = modules['Name']
                         listMalMod = []
 
@@ -596,8 +596,6 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                             file_path = os.path.join(folder_path, file_name)
                             if os.path.isfile(file_path):
                                 print(f"[+] File Name : {file_name} {count}/{file_count}")
-                                if file_count >= 5:
-                                    sleep(16)
                                 if not file_name.startswith(".") and "mrx" in file_name:
                                     try:
                                         file_hash = self.getFileHash(file_path)
