@@ -28,8 +28,8 @@ class MalwareAttributes(ABC):
  
     registryKey = ["MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\WINLOGON", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNONCE", "CURRENTCONTROLSET\\CONTROL\\HIVELIST", "CONTROLSET002\\CONTROL\\SESSION MANAGER", "CURRENTCONTROLSET\\SERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICESONCE", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUNSERVICES", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\NOTIFY", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\USERINIT", "MICROSOFT\\WINDOWS\\CURRENTVERSION\\WINLOGON\\SHELL"]
     legalProcName = ["System", "smss.exe", "csrss.exe", "wininit.exe", "services.exe", "svchost.exe", "lsass.exe", "winlogon.exe", "explorer.exe", "taskhostw.exe", "RuntimeBroker.exe"]
-    # clientAPI = "3e7b7c1801535998c249f13d8bfe6b5739ffbc1eaeb4ffe26341f46812d4041e"
-    clientAPI = "abea8b6da5856997aef0d511b155df9c541536d841c438693b2fb560486474a4"
+    clientAPI = "3e7b7c1801535998c249f13d8bfe6b5739ffbc1eaeb4ffe26341f46812d4041e"
+    # clientAPI = "abea8b6da5856997aef0d511b155df9c541536d841c438693b2fb560486474a4"
 
     def __init__(self, filepath, outputpath):
          self.filepath = filepath
@@ -337,9 +337,10 @@ class WannaCryV1(MalwareAttributes, UtilitiesMalz):
                     # finding filescan
 
                     print("[+] Scanning file objects")
-                    filescan = v.run("windows.filescan.FileScan", self.filepath, self.outputpath, [])
+                    filescan = v.run("windows.filescan.FileScan", self.filepath, self.outputpath, []).copy()
                     fileName = filescan['Name']
                     filescanIOC = []
+                    self.maliciousData['filescan'] = filescan
                     self.maliciousData['iocs']['wanna_file'] = []
 
                     for name in fileName:
@@ -605,7 +606,7 @@ class StuxNet(MalwareAttributes, UtilitiesMalz):
                                         
                                         if ismals and typeMals:
                                             self.maliciousData["mod_name"].append(file_name)
-                                            self.maliciousData["malware_types"].append(typeMals)
+                                            self.maliciousData["mod_mals_types"].append(typeMals)
                                     except Exception as e:
                                         print(e)
                                 count += 1
