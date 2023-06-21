@@ -1069,6 +1069,7 @@ class WannaCryV2(MalwareAttributes, UtilitiesMalz):
                         self.maliciousData['smb_port'] = port
                         if pid not in self.maliciousData['pid']:
                             self.maliciousData['pid'].append(pid)
+                            self.maliciousData['smb_pid'] = pid
                             pslistPidIdx = pslist['PID'].index(pid)
                             susPidList.append(pid)
                             susIdx.append(pslistPidIdx)
