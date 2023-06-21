@@ -230,10 +230,7 @@ class WannaCryV1(MalwareAttributes, UtilitiesMalz):
 
                 infoImage = v.run("windows.info.Info", self.filepath, self.outputpath, []).copy()
                 self.maliciousData["info"].update(infoImage)
-
-                pslist = v.run("windows.pslist.PsList", self.filepath, self.outputpath, [])
-                # imageFileName = pslist['ImageFileName']
-
+            
                 netscan = v.run("windows.netscan.NetScan", self.filepath, self.outputpath, []).copy()
                 temp = netscan["ForeignAddr"]
                 
@@ -375,6 +372,7 @@ class WannaCryV1(MalwareAttributes, UtilitiesMalz):
                                 if key in ldrmod:
                                     listLdrMod[key].extend(ldrmod[key])
                     
+                    self.maliciousData['ldrmod'] = listLdrMod
                     
                     ldrModIOC = []
 
@@ -450,11 +448,13 @@ class WannaCryV1(MalwareAttributes, UtilitiesMalz):
                                     self.maliciousData["registry"].append(sublist)
                         except:
                             continue
-
+                    
+                    # create new directory
                     newdirpath = self.createDirs(self.outputpath, "Exe")
 
                     print("[+] Start to dump the process")
 
+                    # dump pid
                     for malz in maliciousList:
                         print(f"[+] Dumping process {malz}")
                         v.run("windows.pslist.PsList", self.filepath, newdirpath, [None, malz, True])
@@ -1019,11 +1019,8 @@ class WannaCryV2(MalwareAttributes, UtilitiesMalz):
                 # get child
                 for idx in susIdx:
                     pid = pslist['PID'][idx]
-                    # print(f"pid parent : {pid}")
-
                     # find child
                     while isParent:
-                        # print(pid)
                         if pid in pslistPpid:
                             idx = pslistPpid.index(pid)
                             pid = pslist['PID'][idx]
@@ -1180,7 +1177,9 @@ class WannaCryV2(MalwareAttributes, UtilitiesMalz):
                             for key in listLdrMod.keys():
                                 if key in ldrmod:
                                     listLdrMod[key].extend(ldrmod[key])
-                    
+
+                    self.maliciousData['ldrmod'] = listLdrMod
+
                     ldrModIOC = []
                     # find the wannacry file from the result of ldrmod and store it to dictionary
                     for name in listLdrMod['MappedPath']:
