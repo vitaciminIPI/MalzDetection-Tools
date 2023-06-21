@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style>
+        .section {
+            margin-bottom: 50px;
+            padding: 0%;
+        }
+
+        @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #fafafa;
+            width: 100%;
+        }
+
+        p {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1em;
+            font-weight: 300;
+            font-style: bold;
+            line-height: 1.7em;
+            color: black;
+        }
+
+        /* ---------------------------------------------------
+    SIDEBAR STYLE
+----------------------------------------------------- */
+
+        .wrapper {
+            display: flex;
+            position: relative;
+            width: 100%;
+            align-items: stretch;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        #content {
+            width: 100%;
+            min-height: 100vh;
+            transition: all 0.3s;
+            height: auto;
+            margin: 0px 50px;
+            /* position: absolute; */
+            /* background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("background.jpg"); */
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid black;
+        }
+
+        td:not(:first-child) {
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        th {
+            background-color: green;
+        }
+    </style>
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Our Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
+
+    <!-- Font Awesome JS -->
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
+        integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
+        crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
+        integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY"
+        crossorigin="anonymous"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../js/script.js"></script>
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <div id="content">
+            <nav>
+                <section class="section" id="section1">
+                    <p>The first thing to do is checking the file memory information, after the checking is complete the analysis continue by analysis the memory's process list.</p>
+                </section>
+                <section class="section" id="section3">
+                    <p>The next step is checking the connection that happens in file memory, and capture all connection that goes to a foregin IP. All IP that has been captured is sent to virus total and from that action we get several malicious IP ({IPV4})</p>
+                </section>
+                <section class="section" id="section4">
+                    <p>And then there are list of PIDs that connect to malicious IP: </p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                {SUSPID_HEADER}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {SUSPID_CONTENT}
+                        </tbody>
+                    </table>
+                </section>
+                <section class="section" id="section5">
+                    <p>Analysis some hidden process, and here is the result:</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>PID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {HIDPID}
+                        </tbody>
+                    </table>
+                </section>
+                <p>From {COUNTPID} suspicious PIDs that obatained, next do some dlllist, handles, and registry analysis from that PIDs: </p>
+                <section class="section" id="section6">
+                    <h1>Dlllist</h1>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                {DLLLIST_HEADER}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {DLLLIST_CONTENT}
+                        </tbody>
+                    </table>
+                    <br>
+                    <h1>Ldrmod</h1>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                {LDRMOD_HEADER}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {LDRMOD_CONTENT}
+                        </tbody>
+                    </table>
+                    <p><br>During the execution of the ldrmod plugin to scan for concealed DLL files, several DLL files were discovered that appear to be of a suspicious nature:</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Ldrmod_IOC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {LDRMODIOC_CONTENT}
+                        </tbody>
+                    </table>
+                    <br>
+                    <h1>Filescan</h1>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                {FILESCAN_HEADER}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {FILESCAN_CONTENT}
+                        </tbody>
+                    </table>
+                    <br>
+                    <p>A file associated with the notorious ransomware known as WannaCry, specifically a signature file pertaining to WannaCry, has been detected:</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Filescan_IOC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {FILESCANIOC_CONTENT}
+                        </tbody>
+                    </table>
+                </section>
+                <section class="section" id="section7">
+                    <h1>Handles</h1>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                {HANDLES_HEADER}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {HANDLES_CONTENT}
+                        </tbody>
+                    </table>
+                    <br>
+                    <p>A handle file, bearing the signature associated with the infamous ransomware known as WannaCry, has been discovered : </p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Handles_IOC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {HANDLESIOC_CONTENT}
+                        </tbody>
+                    </table>
+                    <br>
+                    <p>A collection of mutex mutants has been detected, indicating the existence of potentially malicious activities or processes :</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Mutex_IOC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {MUTEX_CONTENT}
+                        </tbody>
+                    </table>
+                    <br>
+                    <p>An alarming file path has been identified, suggesting the presence of a potentially suspicious file : </p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>WannaPath_IOC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {WANNAPATH_CONTENT}
+                        </tbody>
+                    </table>
+                </section>
+                <section class="section" id="section8">
+                    <h1>Cmdline</h1>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                {CMDLINE_HEADER}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {CMDLINE_CONTENT}
+                        </tbody>
+                    </table>
+                </section>
+                <section class="section" id="section9">
+                    <h1>Registry</h1>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Last Write Time</th>
+                                <th>Hive Offset</th>
+                                <th>Type</th>
+                                <th>Key</th>
+                                <th>Name</th>
+                                <th>Data</th>
+                                <th>Volatile</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {REGISTRY_CONTENT}
+                        </tbody>
+                    </table>
+                </section>
+                <section class="section" id="section10">
+                    <p>After all analysis done, the result from the analysis as follows: </p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>PID</th>
+                                <th>Process</th>
+                                <th>Malware Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {SUMMARY_CONTENT}
+                        </tbody>
+                    </table>
+                </section>
+            </nav>
+            <footer style="height: 250px;"></footer>
+        </div>
+    </div>
+
+    <!-- jQuery CDN - Slim version (=without AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Popper.JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"
+        integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ"
+        crossorigin="anonymous"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"
+        integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm"
+        crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        function showInput() {
+            var pidField = document.getElementById("pid-field");
+            var offsetField = document.getElementById("offset-field");
+            var keyField = document.getElementById("key-field");
+            var dumpCheck = document.getElementById("dump");
+            var physicalField = document.getElementById("physical-field");
+            var includeCorrupt = document.getElementById("include-corrupt");
+            var recurseCheck = document.getElementById("recurse");
+            var command = document.getElementById("command").value;
+
+            if (command == "pslist" || command == "pstree" || command == "psscan" || command == "dlllist" || command == "handles" || command == "malfind" || command == "cmdline") {
+                pidField.style.display = "block";
+            } else {
+                pidField.style.display = "none";
+            }
+            if (command == "pslist" || command == "pstree" || command == "psscan") {
+                physicalField.style.display = "block";
+            } else {
+                physicalField.style.display = "none";
+            }
+            if (command == "printkey") {
+                offsetField.style.display = "block";
+                keyField.style.display = "block";
+                recurseCheck.style.display = "block";
+            } else {
+                offsetField.style.display = "none";
+                keyField.style.display = "none";
+                recurseCheck.style.display = "none";
+            }
+            if (command == "netscan" || command == "netstat") {
+                includeCorrupt.style.display = "block";
+            } else {
+                includeCorrupt.style.display = "none";
+            }
+            if (command == "pslist" || command == "psscan" || command == "dlllist" || command == "malfind") {
+                dumpCheck.style.display = "block";
+            } else {
+                dumpCheck.style.display = "none";
+            }
+        }
+        function openFileExplorer() {
+            // Membuat elemen input untuk memilih file
+            var input = document.createElement('input');
+            input.type = 'file';
+
+            // Menambahkan event listener untuk mendapatkan path file yang dipilih
+            input.onchange = function (event) {
+                var file = event.target.files[0];
+
+                // Memeriksa apakah file yang dipilih valid
+                if (file) {
+                    // Mengambil nilai 'name' dari file yang dipilih
+                    var path = file.name;
+
+                    // Mengubah value dari input text dengan id 'file' menjadi path file yang dipilih
+                    document.getElementById('file-path').value = path;
+                } else {
+                    console.log('Tidak ada file yang dipilih.');
+                }
+            };
+
+            // Membuka file explorer
+            input.click();
+        }
+        document.getElementById("my-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+            var pidValue = document.getElementById("pid-fieldvalue").value;
+            var offsetValue = document.getElementById("offset-fieldvalue").value;
+            var keyValue = document.getElementById("key-fieldvalue").value;
+            if (document.getElementById("dumpCheck").checked) {
+                document.getElementById("dumpCheck").value = "true"
+            } else {
+                document.getElementById("dumpCheck").value = "false"
+            }
+            if (document.getElementById("include-corruptCheck").checked) {
+                document.getElementById("include-corruptCheck").value = "true";
+            } else {
+                document.getElementById("include-corruptCheck").value = "false"
+            }
+            if (document.getElementById("recurseCheck").checked) {
+                document.getElementById("recurseCheck").value = "true";
+            } else {
+                document.getElementById("recurseCheck").value = "false"
+            }
+            if (document.getElementById("physical-check").checked) {
+                document.getElementById("physical-check").value = "true";
+            } else {
+                document.getElementById("physical-check").value = "false"
+            }
+            var command = document.getElementById("command").value;
+            var filePath = document.getElementById("file-path").value;
+            $.ajax({
+                type: "POST", // method request
+                url: "/process-form", // url request
+                data: $('form').serialize(), // data yang dikirimkan
+                success: function (result) { // response sukses
+                    // $("#message").text("Command: " + result.message);
+                    // $.each(result, function (key, value) {
+                    //     console.log(key + ": " + value);
+                    //     // atau Anda bisa menambahkan kode untuk menampilkan data tersebut di halaman web
+                    // });
+                    var html = '';
+                    $.each(result, function (key, value) {
+                        html += key + ": " + value + "<br>";
+                    });
+                    $('#result').html(html);
+                },
+                error: function (xhr, status, error) { // response gagal
+                    console.log(xhr.responseText); // menampilkan pesan error di console log
+                }
+            });
+        });
+    </script>
+</body>
+
+
+</html>
+<!-- @app.route('/process-form', methods=['POST'])
+def process_form():
+    command = request.form.get("physical-check")
+    if command == 'true':
+        return jsonify({"message": "true"})       
+    else:
+        return jsonify({"message": "false"}) -->

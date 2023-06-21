@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style>
+        .section {
+            margin-bottom: 50px;
+            padding: 0%;
+        }
+
+        @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #fafafa;
+            width: 100%;
+        }
+
+        p {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1em;
+            font-weight: 300;
+            font-style: bold;
+            line-height: 1.7em;
+            color: black;
+        }
+
+        /* ---------------------------------------------------
+    SIDEBAR STYLE
+----------------------------------------------------- */
+
+        .wrapper {
+            display: flex;
+            position: relative;
+            width: 100%;
+            align-items: stretch;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        #content {
+            width: 100%;
+            min-height: 100vh;
+            transition: all 0.3s;
+            height: auto;
+            margin: 0px 50px;
+            /* position: absolute; */
+            /* background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("background.jpg"); */
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid black;
+        }
+
+        td:not(:first-child) {
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        th {
+            background-color: green;
+        }
+    </style>
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Our Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
+
+    <!-- Font Awesome JS -->
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
+        integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
+        crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
+        integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY"
+        crossorigin="anonymous"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../js/script.js"></script>
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <div id="content">
+            <nav>
+                <p>Memory file information: </p>
+                <table id="reportTable">
+                    <thead>
+                        <tr>
+                            {INFO_HEADER}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {INFO_CONTENT}
+                    </tbody>
+                </table>
+                <br>
+                <section class="section" id="section1">
+                    <p>First of all, check the process by seeing if any malicious code has been injected into the process using malfind.</p>
+                </section>
+                <section class="section" id="section3">
+                    <p>Then, dumped all the pids that appeared and checked if there was a malicious process using virus total and found a file with the name: {EXE_NAME} the alarm sounded. That file belongs to pid {PID}.</p>
+                </section>
+                <section class="section" id="section4">
+                    <p>From the dangerous pid, do a deeper check by looking for the childs pid and ancestor pid. Then, bring up all the children that are one level below the parent's pid to check if any other malicious processes are left behind and connected,</p><br>
+                    <p>Dump and send the pid to virus total, after that store all the pids that detected malicious from virus total detection.</p><br>
+                    <p>Then From the pid collected, a network check was also carried out to see if a connection was made and apparently there was a connection to the IP {METAS_CONNECT} and {IPV4}. There is a shell connection with state {METAS_TCP_STATE} via port {METAS_PORT} to {METAS_CONNECT}. Of the suspected IPs, Found {COUNT_IP} IP that make virus total warning go out, that is: {MALIP}</p><br>
+                    <p>The result from analysis: </p>
+                    <p>{CONCLUSION}</p>
+            </nav>
+            <footer style="height: 250px;"></footer>
+        </div>
+    </div>
+
+    <!-- jQuery CDN - Slim version (=without AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Popper.JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"
+        integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ"
+        crossorigin="anonymous"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"
+        integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm"
+        crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        window.onload = function () {
+            var section2Element = document.getElementById('section2');
+            var section2Content = section2Element.innerHTML;
+
+            var section3Element = document.getElementById('section3');
+            var section3Content = section3Element.innerHTML;
+
+            var section4Element = document.getElementById('section4');
+            var section4Content = section4Element.innerHTML;
+
+            var section5Element = document.getElementById('section5');
+            var section5Content = section5Element.innerHTML;
+
+            var section6Element = document.getElementById('section6');
+            var section6Content = section6Element.innerHTML;
+
+            var section7Element = document.getElementById('section7');
+            var section7Content = section7Element.innerHTML;
+
+            var section8Element = document.getElementById('section8');
+            var section8Content = section8Element.innerHTML;
+
+            var section9Element = document.getElementById('section9');
+            var section9Content = section9Element.innerHTML;
+
+            var section10Element = document.getElementById('section10');
+            var section10Content = section10Element.innerHTML;
+
+            var section11Element = document.getElementById('section11');
+            var section11Content = section11Element.innerHTML;
+
+            var section12Element = document.getElementById('section12');
+            var section12Content = section12Element.innerHTML;
+
+            if (section2Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section2Element.style.display = 'none';
+            }
+            if (section3Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section3Element.style.display = 'none';
+            }
+            if (section4Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section4Element.style.display = 'none';
+            }
+            if (section5Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section5Element.style.display = 'none';
+            }
+            if (section6Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section6Element.style.display = 'none';
+            }
+            if (section7Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section7Element.style.display = 'none';
+            }
+            if (section8Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section8Element.style.display = 'none';
+            }
+            if (section9Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section9Element.style.display = 'none';
+            }
+            if (section10Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section10Element.style.display = 'none';
+            }
+            if (section11Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section11Element.style.display = 'none';
+            }
+            if (section12Content.includes('kosong')) {
+                // Jika terdapat, hilangkan section tersebut
+                section12Element.style.display = 'none';
+            }
+        };
+
+        function showInput() {
+            var pidField = document.getElementById("pid-field");
+            var offsetField = document.getElementById("offset-field");
+            var keyField = document.getElementById("key-field");
+            var dumpCheck = document.getElementById("dump");
+            var physicalField = document.getElementById("physical-field");
+            var includeCorrupt = document.getElementById("include-corrupt");
+            var recurseCheck = document.getElementById("recurse");
+            var command = document.getElementById("command").value;
+
+            if (command == "pslist" || command == "pstree" || command == "psscan" || command == "dlllist" || command == "handles" || command == "malfind" || command == "cmdline") {
+                pidField.style.display = "block";
+            } else {
+                pidField.style.display = "none";
+            }
+            if (command == "pslist" || command == "pstree" || command == "psscan") {
+                physicalField.style.display = "block";
+            } else {
+                physicalField.style.display = "none";
+            }
+            if (command == "printkey") {
+                offsetField.style.display = "block";
+                keyField.style.display = "block";
+                recurseCheck.style.display = "block";
+            } else {
+                offsetField.style.display = "none";
+                keyField.style.display = "none";
+                recurseCheck.style.display = "none";
+            }
+            if (command == "netscan" || command == "netstat") {
+                includeCorrupt.style.display = "block";
+            } else {
+                includeCorrupt.style.display = "none";
+            }
+            if (command == "pslist" || command == "psscan" || command == "dlllist" || command == "malfind") {
+                dumpCheck.style.display = "block";
+            } else {
+                dumpCheck.style.display = "none";
+            }
+        }
+        function openFileExplorer() {
+            // Membuat elemen input untuk memilih file
+            var input = document.createElement('input');
+            input.type = 'file';
+
+            // Menambahkan event listener untuk mendapatkan path file yang dipilih
+            input.onchange = function (event) {
+                var file = event.target.files[0];
+
+                // Memeriksa apakah file yang dipilih valid
+                if (file) {
+                    // Mengambil nilai 'name' dari file yang dipilih
+                    var path = file.name;
+
+                    // Mengubah value dari input text dengan id 'file' menjadi path file yang dipilih
+                    document.getElementById('file-path').value = path;
+                } else {
+                    console.log('Tidak ada file yang dipilih.');
+                }
+            };
+
+            // Membuka file explorer
+            input.click();
+        }
+        document.getElementById("my-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+            var pidValue = document.getElementById("pid-fieldvalue").value;
+            var offsetValue = document.getElementById("offset-fieldvalue").value;
+            var keyValue = document.getElementById("key-fieldvalue").value;
+            if (document.getElementById("dumpCheck").checked) {
+                document.getElementById("dumpCheck").value = "true"
+            } else {
+                document.getElementById("dumpCheck").value = "false"
+            }
+            if (document.getElementById("include-corruptCheck").checked) {
+                document.getElementById("include-corruptCheck").value = "true";
+            } else {
+                document.getElementById("include-corruptCheck").value = "false"
+            }
+            if (document.getElementById("recurseCheck").checked) {
+                document.getElementById("recurseCheck").value = "true";
+            } else {
+                document.getElementById("recurseCheck").value = "false"
+            }
+            if (document.getElementById("physical-check").checked) {
+                document.getElementById("physical-check").value = "true";
+            } else {
+                document.getElementById("physical-check").value = "false"
+            }
+            var command = document.getElementById("command").value;
+            var filePath = document.getElementById("file-path").value;
+            $.ajax({
+                type: "POST", // method request
+                url: "/process-form", // url request
+                data: $('form').serialize(), // data yang dikirimkan
+                success: function (result) { // response sukses
+                    // $("#message").text("Command: " + result.message);
+                    // $.each(result, function (key, value) {
+                    //     console.log(key + ": " + value);
+                    //     // atau Anda bisa menambahkan kode untuk menampilkan data tersebut di halaman web
+                    // });
+                    var html = '';
+                    $.each(result, function (key, value) {
+                        html += key + ": " + value + "<br>";
+                    });
+                    $('#result').html(html);
+                },
+                error: function (xhr, status, error) { // response gagal
+                    console.log(xhr.responseText); // menampilkan pesan error di console log
+                }
+            });
+        });
+    </script>
+</body>
+
+
+</html>
+<!-- @app.route('/process-form', methods=['POST'])
+def process_form():
+    command = request.form.get("physical-check")
+    if command == 'true':
+        return jsonify({"message": "true"})       
+    else:
+        return jsonify({"message": "false"}) -->
