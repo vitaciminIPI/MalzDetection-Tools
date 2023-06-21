@@ -140,17 +140,19 @@
             <ul class="list-unstyled components">
                 <h4 class="mx-1 my-3">We will analyze the memory file without wasting your time</h4>
                 <form id="form1" method="post" enctype="multipart/form-data">
-                    <!-- Form pertama -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <label for="file-path" style="margin-top: 20px;">Browse Image:</label><br>
                     <input type="file" name="file" onchange="submitform()">
                 </form>
                 <form name="my-formauto" id="my-formauto" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <label style="margin-top: 20px; margin-bottom: 0;" for="command">Malware:</label>
                     <select name="malware" id="malware">
                         <option value="">Select a Malware</option>
                         <option value="wannacry">WannaCry</option>
-                        <option value="emotet">Emotet</option>
+                        <option value="metasploit">Metasploit</option>
                         <option value="stuxnet">StuxNet</option>
+                        <option value="custom">Custom</option>
                     </select>
                     <div class="help-container">
                         <button id="helpButton" type="button">?</button>

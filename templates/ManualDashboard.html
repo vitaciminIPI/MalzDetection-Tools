@@ -143,6 +143,7 @@
                     </li>
                     <li class="">
                         <form action="#">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                             <button class="mt-1 bt-generate me-2" type="submit" onclick="notifSuccess()"><i
                                     class='fas fa-file-alt'></i>
                                 Generate Report</button>
@@ -158,11 +159,12 @@
 
             <ul class="list-unstyled components">
                 <form id="form1" method="post" enctype="multipart/form-data">
-                    <!-- Form pertama -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <label for="file-path" style="margin-top: 20px;">Browse Image:</label><br>
                     <input type="file" name="file" onchange="submitform(); disableElement();">
                 </form>
                 <form name="my-form" id="my-form" action="#" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <label style="margin-top: 20px; margin-bottom: 0;" for="command">Command:</label>
                     <select name="command" id="command" onchange="showInput()">
                         <option value="">Select a Command</option>
@@ -394,6 +396,10 @@
                 document.getElementById("physical-check").value = "false"
             }
             var commandsend = document.getElementById("command").value;
+            if(pidValue == "" && commandsend == "windows.handles.Handles"){
+                alert("PID field must be filled!");
+                return false;
+            }
             // var filePath = document.getElementById("file-path").value;
             var table = document.getElementById("data-table");
             table.style.display = "block";
