@@ -1004,6 +1004,7 @@ class WannaCryV2(MalwareAttributes, UtilitiesMalz):
                 pslistPpid = pscopy['PPID']
                 susIdx = []
                 susPidList = []
+                self.maliciousData['wanadec_pid'] = []
 
                 print("[+] Find @WanaDecryptor")
                 # find signature files of wannacry and store the pid and index
@@ -1012,6 +1013,7 @@ class WannaCryV2(MalwareAttributes, UtilitiesMalz):
                         susIdx.append(idx)
                         self.maliciousData['pid'].append(pslist['PID'][idx])
                         susPidList.append(pslist['PID'][idx])
+                        self.maliciousData['wanadec_pid'].append(pslist['PID'][idx])
                         self.maliciousData['process_name'].append(pslist['ImageFileName'][idx])
                 
                 isParent = True
@@ -1069,7 +1071,6 @@ class WannaCryV2(MalwareAttributes, UtilitiesMalz):
                         self.maliciousData['smb_port'] = port
                         if pid not in self.maliciousData['pid']:
                             self.maliciousData['pid'].append(pid)
-                            self.maliciousData['smb_pid'] = pid
                             pslistPidIdx = pslist['PID'].index(pid)
                             susPidList.append(pid)
                             susIdx.append(pslistPidIdx)
