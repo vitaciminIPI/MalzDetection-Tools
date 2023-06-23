@@ -1196,6 +1196,7 @@ class WannaCryV2(MalwareAttributes, UtilitiesMalz):
                     filescan = v.run("windows.filescan.FileScan", self.filepath, self.outputpath, [])
                     fileName = filescan['Name']
                     filescanIOC = []
+                    self.maliciousData['filescan'] = filescan
                     self.maliciousData['iocs']['wanna_file'] = []
 
                     # find for wannacry file objects from the result of filescan and store it to dictionary
