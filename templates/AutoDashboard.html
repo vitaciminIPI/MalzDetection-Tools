@@ -9,13 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <style>
-        #side_nav {
-            background: black;
-            min-width: 250px;
-            max-width: 250px;
-            padding-top: 5vh;
-        }
-
         .navbar {
             margin: 0;
             padding: 0;
@@ -81,9 +74,7 @@
             justify-content: center;
             align-items: center;
             background-color: rgba(255, 255, 255, 0.7);
-            /* Warna latar belakang transparan */
             z-index: 9999;
-            /* Menempatkan elemen loading di depan konten */
         }
 
         .loading-content {
@@ -95,14 +86,9 @@
             height: 50px;
         }
     </style>
-    <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <!-- Our Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="../static/style.css">
-    <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
 
-    <!-- Font Awesome JS -->
     <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
         integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
         crossorigin="anonymous"></script>
@@ -134,7 +120,6 @@
         </div>
     </nav>
     <div class="wrapper">
-        <!-- Sidebar  -->
         <nav id="sidebar">
 
             <ul class="list-unstyled components">
@@ -149,10 +134,10 @@
                     <label style="margin-top: 20px; margin-bottom: 0;" for="command">Malware:</label>
                     <select name="malware" id="malware">
                         <option value="">Select a Malware</option>
-                        <option value="wannacry">WannaCry</option>
-                        <option value="metasploit">Metasploit</option>
+                        <option value="wannacry">WannaCry V1</option>
+                        <option value="trojan">Trojan Shell</option>
                         <option value="stuxnet">StuxNet</option>
-                        <option value="custom">Custom</option>
+                        <option value="wannacryv2">WannaCry V2</option>
                     </select>
                     <div class="help-container">
                         <button id="helpButton" type="button">?</button>
@@ -165,7 +150,6 @@
             </ul>
         </nav>
 
-        <!-- Page Content  -->
         <div id="content">
             <div id="loading" style="display: none;">
                 <div class="loading-content">
@@ -187,13 +171,10 @@
         </div>
     </div>
 
-    <!-- jQuery CDN - Slim version (=without AJAX) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Popper.JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"
         integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ"
         crossorigin="anonymous"></script>
-    <!-- Bootstrap JS -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"
         integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm"
         crossorigin="anonymous"></script>
@@ -204,20 +185,18 @@
             var filepath = "{{ file_path }}" + "/static/reports";
             $('#submitButton').click(function (e) {
                 loadingElement.style.display = 'flex';
-                var formData = $('#my-formauto').serialize(); // Mengumpulkan nilai-nilai form
+                var formData = $('#my-formauto').serialize(); 
 
                 var htmlReport;
                 $.ajax({
-                    url: '/processAuto', // URL endpoint Flask
+                    url: '/processAuto', 
                     type: 'POST',
                     data: formData,
                     success: function (response) {
-                        // Tindakan yang akan diambil setelah berhasil dikirim
-                        // htmlReport = response;
                         loadingElement.style.display = 'none';
                         alert("File telah berhasil diunduh pada: " + filepath);
                         $.ajax({
-                            url: '/open_report',  // URL endpoint Flask
+                            url: '/open_report', 
                             type: 'GET',
                             success: function (response) {
                                 var file = new Blob([response], { type: 'text/html' });
@@ -235,7 +214,6 @@
 
                     },
                     error: function (error) {
-                        // Tindakan yang akan diambil jika terjadi kesalahan
                         alert(error);
                         loadingElement.style.display = 'none';
                     }
@@ -247,133 +225,20 @@
             $('#form1').submit();
         }
 
-        // function showInput() {
-        //     var pidField = document.getElementById("pid-field");
-        //     var offsetField = document.getElementById("offset-field");
-        //     var keyField = document.getElementById("key-field");
-        //     var dumpCheck = document.getElementById("dump");
-        //     var physicalField = document.getElementById("physical-field");
-        //     var includeCorrupt = document.getElementById("include-corrupt");
-        //     var recurseCheck = document.getElementById("recurse");
-        //     var command = document.getElementById("command").value;
-
-        //     if (command == "pslist" || command == "pstree" || command == "psscan" || command == "dlllist" || command == "handles" || command == "malfind" || command == "cmdline") {
-        //         pidField.style.display = "block";
-        //     } else {
-        //         pidField.style.display = "none";
-        //     }
-        //     if (command == "pslist" || command == "pstree" || command == "psscan") {
-        //         physicalField.style.display = "block";
-        //     } else {
-        //         physicalField.style.display = "none";
-        //     }
-        //     if (command == "printkey") {
-        //         offsetField.style.display = "block";
-        //         keyField.style.display = "block";
-        //         recurseCheck.style.display = "block";
-        //     } else {
-        //         offsetField.style.display = "none";
-        //         keyField.style.display = "none";
-        //         recurseCheck.style.display = "none";
-        //     }
-        //     if (command == "netscan" || command == "netstat") {
-        //         includeCorrupt.style.display = "block";
-        //     } else {
-        //         includeCorrupt.style.display = "none";
-        //     }
-        //     if (command == "pslist" || command == "psscan" || command == "dlllist" || command == "malfind") {
-        //         dumpCheck.style.display = "block";
-        //     } else {
-        //         dumpCheck.style.display = "none";
-        //     }
-        // }
-        // function openFileExplorer() {
-        //     // Membuat elemen input untuk memilih file
-        //     var input = document.createElement('input');
-        //     input.type = 'file';
-
-        //     // Menambahkan event listener untuk mendapatkan path file yang dipilih
-        //     input.onchange = function (event) {
-        //         var file = event.target.files[0];
-
-        //         // Memeriksa apakah file yang dipilih valid
-        //         if (file) {
-        //             // Mengambil nilai 'name' dari file yang dipilih
-        //             var path = file.name;
-
-        //             // Mengubah value dari input text dengan id 'file' menjadi path file yang dipilih
-        //             document.getElementById('file-path').value = path;
-        //         } else {
-        //             console.log('Tidak ada file yang dipilih.');
-        //         }
-        //     };
-
-        //     // Membuka file explorer
-        //     input.click();
-        // }
-        // document.getElementById("my-form").addEventListener("submit", function (event) {
-        //     event.preventDefault();
-        //     var pidValue = document.getElementById("pid-fieldvalue").value;
-        //     var offsetValue = document.getElementById("offset-fieldvalue").value;
-        //     var keyValue = document.getElementById("key-fieldvalue").value;
-        //     if (document.getElementById("dumpCheck").checked) {
-        //         document.getElementById("dumpCheck").value = "true"
-        //     } else {
-        //         document.getElementById("dumpCheck").value = "false"
-        //     }
-        //     if (document.getElementById("include-corruptCheck").checked) {
-        //         document.getElementById("include-corruptCheck").value = "true";
-        //     } else {
-        //         document.getElementById("include-corruptCheck").value = "false"
-        //     }
-        //     if (document.getElementById("recurseCheck").checked) {
-        //         document.getElementById("recurseCheck").value = "true";
-        //     } else {
-        //         document.getElementById("recurseCheck").value = "false"
-        //     }
-        //     if (document.getElementById("physical-check").checked) {
-        //         document.getElementById("physical-check").value = "true";
-        //     } else {
-        //         document.getElementById("physical-check").value = "false"
-        //     }
-        //     var command = document.getElementById("command").value;
-        //     var filePath = document.getElementById("file-path").value;
-        //     $.ajax({
-        //         type: "POST", // method request
-        //         url: "/process-form", // url request
-        //         data: $('form').serialize(), // data yang dikirimkan
-        //         success: function (result) { // response sukses
-        //             // $("#message").text("Command: " + result.message);
-        //             // $.each(result, function (key, value) {
-        //             //     console.log(key + ": " + value);
-        //             //     // atau Anda bisa menambahkan kode untuk menampilkan data tersebut di halaman web
-        //             // });
-        //             var html = '';
-        //             $.each(result, function (key, value) {
-        //                 html += key + ": " + value + "<br>";
-        //             });
-        //             $('#result').html(html);
-        //         },
-        //         error: function (xhr, status, error) { // response gagal
-        //             console.log(xhr.responseText); // menampilkan pesan error di console log
-        //         }
-        //     });
-        // });
-
         $(document).ready(function () {
             $('#sidebarCollapse').on('click', function () {
                 $('#sidebar').toggleClass('active');
                 $(this).toggleClass('dim');
             });
         });
-        var button = document.getElementById("sidebarCollapse"); // Ganti "myButton" dengan ID tombol Anda
-        var sidebar = document.getElementById("sidebar"); // Ganti "mySidebar" dengan ID sidebar Anda
+        var button = document.getElementById("sidebarCollapse"); 
+        var sidebar = document.getElementById("sidebar");
 
         function shiftButton() {
             if (sidebar.classList.contains("active")) {
                 button.style.left = "0";
             } else {
-                button.style.left = "260px"; // Ganti "200px" dengan jarak yang diinginkan dari sisi kanan
+                button.style.left = "260px"; 
             }
         }
 
@@ -383,7 +248,6 @@
 
         window.addEventListener("resize", shiftButton);
 
-        // Tombol Help
         var helpButton = document.getElementById("helpButton");
         var helpInfo = document.getElementById("helpInfo");
 
@@ -399,13 +263,4 @@
         });
     </script>
 </body>
-
-
 </html>
-<!-- @app.route('/process-form', methods=['POST'])
-def process_form():
-    command = request.form.get("physical-check")
-    if command == 'true':
-        return jsonify({"message": "true"})       
-    else:
-        return jsonify({"message": "false"}) -->

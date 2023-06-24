@@ -88,73 +88,30 @@
     <div class="wrapper">
         <div id="content">
             <nav>
+                <p>Memory file information: </p>
+                <table id="reportTable">
+                    <thead>
+                        <tr>
+                            {INFO_HEADER}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {INFO_CONTENT}
+                    </tbody>
+                </table>
+                <br>
                 <section class="section" id="section1">
-                    <p>First of all, check the memory file information, then check the processes to see if there are any
-                        unauthorized processes belonging to Windows or suspicious processes.</p>
-                    <p>Memory file information: </p>
-                    <table id="reportTable">
-                        <thead>
-                            <tr>
-                                {INFO_HEADER}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {INFO_CONTENT}
-                        </tbody>
-                    </table>
+                    <p>First of all, check the process by seeing if any malicious code has been injected into the process using malfind.</p>
                 </section>
                 <section class="section" id="section3">
-                    <p>From examining each process, we found several processes with the same name {SAMEPROCESS}, so we
-                        need to check the pid of that process and find a different pid. Then check the process with the
-                        different PPID on the total virus to find out if there is an anomalous process.</p>
+                    <p>Then, dumped all the pids that appeared and checked if there was a malicious process using virus total and found a file with the name: {EXE_NAME} the alarm sounded. That file belongs to pid {PID}.</p>
                 </section>
                 <section class="section" id="section4">
-                    <p>The results of the total virus examination, obtained an anomalous process: </p>
-                    <table id="reportTable">
-                        <thead>
-                            <tr>
-                                <th>PID</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {ANOLPID}
-                        </tbody>
-                    </table>
-                </section>
-                <section class="section" id="section5">
-                    <p>So it is necessary to pay attention or save the pid of the process for further inspection and can carry out other checks. After that check the system calls to detect hidden processes in the driver.</p>
-                    <table id="reportTable">
-                        <thead>
-                            <tr>
-                                {SSDT_HEADER}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {SSDT_CONTENT}
-                        </tbody>
-                    </table>
-                    <p>Perform dump and analysis on virus totals</p>
-                </section>
-                <section class="section" id="section6">
-                    <p>Call callbacks to see malicious activity by rootkits</p>
-                    <table id="reportTable">
-                        <thead>
-                            <tr>
-                                {CALLBACKS_HEADER}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {CALLBACKS_CONTENT}
-                        </tbody>
-                    </table>
-                    <p>Perform dump and analysis on virus totals</p>
-                </section>
-                <section class="section" id="section7">
-                </section>
-                <section class="section" id="section8">
+                    <p>From the dangerous pid, do a deeper check by looking for the childs pid and ancestor pid. Then, bring up all the children that are one level below the parent's pid to check if any other malicious processes are left behind and connected,</p><br>
+                    <p>Dump and send the pid to virus total, after that store all the pids that detected malicious from virus total detection.</p><br>
+                    <p>Then From the pid collected, a network check was also carried out to see if a connection was made and apparently there was a connection to the IP {METAS_CONNECT} and {IPV4}. There is a shell connection with state {METAS_TCP_STATE} via port {METAS_PORT} to {METAS_CONNECT}. Of the suspected IPs, Found {COUNT_IP} IP that make virus total warning go out, that is: {MALIP}</p><br>
                     <p>The result from analysis: </p>
                     <p>{CONCLUSION}</p>
-                </section>
             </nav>
             <footer style="height: 250px;"></footer>
         </div>
@@ -171,4 +128,13 @@
     <script type="text/javascript">
     </script>
 </body>
+
+
 </html>
+<!-- @app.route('/process-form', methods=['POST'])
+def process_form():
+    command = request.form.get("physical-check")
+    if command == 'true':
+        return jsonify({"message": "true"})       
+    else:
+        return jsonify({"message": "false"}) -->

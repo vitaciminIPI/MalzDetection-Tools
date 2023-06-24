@@ -90,21 +90,35 @@
         <div id="content">
             <nav>
                 <section class="section" id="section1">
-                    <p>The first thing to do is checking the file memory information, after the checking is complete the analysis continue by analysis the memory's process list.</p>
-                </section>
-                <section class="section" id="section3">
-                    <p>The next step is checking the connection that happens in file memory, and capture all connection that goes to a foregin IP. All IP that has been captured is sent to virus total and from that action we get several malicious IP ({IPV4})</p>
-                </section>
-                <section class="section" id="section4">
-                    <p>And then there are list of PIDs that connect to malicious IP: </p>
+                    <p>Begin by examining the list of processes to locate the process labeled "@WanaDecryptor". Upon investigation, it has been confirmed that a process named "@WanaDecryptor" has been identified with a process ID (PID) of:</p>
                     <table id="reportTable">
                         <thead>
                             <tr>
-                                {SUSPID_HEADER}
+                                <th>PID</th>
                             </tr>
                         </thead>
                         <tbody>
                             {SUSPID_CONTENT}
+                        </tbody>
+                    </table>
+                </section>
+                <section class="section" id="section3">
+                    <p>Obtain all processes associated with the "@wanadecryptor" process, including its child processes, parent processes, and ancestor processes. Retrieve the complete process ID (PID) and store it for further reference.</p>
+                    
+                    Conduct an examination of the connected connections within the memory file by employing the netscan plugin. Consequently, a connection utilizing the SMB port {SMB_PORT} has been detected. The process identified by the PID {SMB_PID} is responsible for utilizing this particular port.
+                    
+                </section>
+                <section class="section" id="section4">
+                    <p>Perform a process dump of all the identified malicious PIDs and subsequently conduct a comprehensive virus scan on these processes.</p>
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>PID</th>
+                                <th>Process Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {PID_CONTENT}
                         </tbody>
                     </table>
                 </section>
@@ -121,7 +135,6 @@
                         </tbody>
                     </table>
                 </section>
-                <p>From {COUNTPID} suspicious PIDs that obatained, next do some dlllist, handles, and registry analysis from that PIDs: </p>
                 <section class="section" id="section6">
                     <h1>Dlllist</h1>
                     <table id="reportTable">
@@ -195,41 +208,33 @@
                         </tbody>
                     </table>
                     <br>
-                    <p>A handle file, bearing the signature associated with the infamous ransomware known as WannaCry, has been discovered : </p>
-                    <table id="reportTable">
-                        <thead>
-                            <tr>
-                                <th>Handles_IOC</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {HANDLESIOC_CONTENT}
-                        </tbody>
-                    </table>
+                    <section class="section" id="sectionmutex">
+                        <p>A collection of mutex mutants has been detected, indicating the existence of potentially malicious activities or processes :</p>
+                        <table id="reportTable">
+                            <thead>
+                                <tr>
+                                    <th>Mutex_IOC</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {MUTEX_CONTENT}
+                            </tbody>
+                        </table>
+                    </section>
                     <br>
-                    <p>A collection of mutex mutants has been detected, indicating the existence of potentially malicious activities or processes :</p>
-                    <table id="reportTable">
-                        <thead>
-                            <tr>
-                                <th>Mutex_IOC</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {MUTEX_CONTENT}
-                        </tbody>
-                    </table>
-                    <br>
-                    <p>An alarming file path has been identified, suggesting the presence of a potentially suspicious file : </p>
-                    <table id="reportTable">
-                        <thead>
-                            <tr>
-                                <th>WannaPath_IOC</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {WANNAPATH_CONTENT}
-                        </tbody>
-                    </table>
+                    <section class="section" id="sectionwanna">
+                        <p>An alarming file path has been identified, suggesting the presence of a potentially suspicious file : </p>
+                        <table id="reportTable">
+                            <thead>
+                                <tr>
+                                    <th>WannaPath_IOC</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {WANNAPATH_CONTENT}
+                            </tbody>
+                        </table>
+                    </section>
                 </section>
                 <section class="section" id="section8">
                     <h1>Cmdline</h1>
@@ -292,6 +297,37 @@
         crossorigin="anonymous"></script>
 
     <script type="text/javascript">
+        window.onload = function () {
+            var section5Element = document.getElementById('section5');
+            var section5Content = section5Element.innerHTML;
+
+            var sectionmutexElement = document.getElementById('sectionmutex');
+            var sectionmutexContent = sectionmutexElement.innerHTML;
+
+            var sectionwannaElement = document.getElementById('sectionwanna');
+            var sectionwannaContent = sectionwannaElement.innerHTML;
+
+            if (section5Content.includes('kosong')) {
+                section5Element.style.display = 'none';
+            }
+
+            if (sectionmutexContent.includes('kosong')) {
+                sectionmutexElement.style.display = 'none';
+            }
+
+            if (sectionwannaContent.includes('kosong')) {
+                sectionwannaElement.style.display = 'none';
+            }
+        };
     </script>
 </body>
+
+
 </html>
+<!-- @app.route('/process-form', methods=['POST'])
+def process_form():
+    command = request.form.get("physical-check")
+    if command == 'true':
+        return jsonify({"message": "true"})       
+    else:
+        return jsonify({"message": "false"}) -->
