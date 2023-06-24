@@ -71,7 +71,6 @@
 
         .clicked-row {
             background-color: #ff4d4d;
-            /* Warna latar belakang untuk baris yang sudah diklik */
         }
 
         .bt-generate {
@@ -93,9 +92,7 @@
             justify-content: center;
             align-items: center;
             background-color: rgba(255, 255, 255, 0.7);
-            /* Warna latar belakang transparan */
             z-index: 9999;
-            /* Menempatkan elemen loading di depan konten */
         }
 
         .loading-content {
@@ -107,14 +104,10 @@
             height: 50px;
         }
     </style>
-    <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <!-- Our Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="style.css">
-    <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
 
-    <!-- Font Awesome JS -->
     <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
         integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
         crossorigin="anonymous"></script>
@@ -154,7 +147,6 @@
         </div>
     </nav>
     <div class="wrapper">
-        <!-- Sidebar  -->
         <nav id="sidebar">
 
             <ul class="list-unstyled components">
@@ -222,7 +214,6 @@
             </ul>
         </nav>
 
-        <!-- Page Content  -->
         <div id="content">
             <div id="loading" style="display: none;">
                 <div class="loading-content">
@@ -251,9 +242,7 @@
         </div>
     </div>
 
-    <!-- jQuery CDN - Slim version (=without AJAX) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Popper.JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"
         integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ"
         crossorigin="anonymous"></script>
@@ -264,20 +253,12 @@
 
     <script type="text/javascript">
         var dictionary = {};
-        // command = ["windows.info.Info", "windows.pslist.PsList", "windows.pstree.PsTree", "windows.psscan.PsScan", "windows.dlllist.DllList", "windows.handles.Handles", "windows.malfind.Malfind", "windows.cmdline.CmdLine", "windows.registry.printkey.PrintKey", "windows.netscan.NetScan", "windows.netstat.NetStat"]
-        // for (var i = 0; i < command.length; i++) {
-        //     if (!(command[i] in dictionary)) {
-        //         dictionary[command] = {};
-        //     }
-        // }
 
         function disableElement() {
-            // Menonaktifkan elemen
             var elem = document.getElementById("command");
             var loadingElement = document.getElementById('loading');
             loadingElement.style.display = 'flex';
 
-            // Menunggu 3 detik
             setTimeout(function () {
                 loadingElement.style.display = 'none';
             }, 3000);
@@ -324,34 +305,24 @@
             }
         }
         function openFileExplorer() {
-            // Membuat elemen input untuk memilih file
             var input = document.createElement('input');
             input.type = 'file';
 
-            // Menambahkan event listener untuk mendapatkan path file yang dipilih
             input.onchange = function (event) {
                 var file = event.target.files[0];
-
-                // Memeriksa apakah file yang dipilih valid
                 if (file) {
-                    // Mengambil nilai 'name' dari file yang dipilih
                     var path = file.name;
-
-                    // Mengubah value dari input text dengan id 'file' menjadi path file yang dipilih
                     document.getElementById('file-path').value = path;
                 } else {
                     console.log('Tidak ada file yang dipilih.');
                 }
             };
-
-            // Membuka file explorer
             input.click();
         }
 
         function findIndeks(tempDict, command) {
             var counter = 0;
             for (var i = 0; i < tempDict.length; i++) {
-                // console.log(tempDict[i])
                 if (tempDict[i] == "Variable" && command == "windows.info.Info") {
                     counter = i;
                     break;
@@ -400,7 +371,6 @@
                 alert("PID field must be filled!");
                 return false;
             }
-            // var filePath = document.getElementById("file-path").value;
             var table = document.getElementById("data-table");
             table.style.display = "block";
             var tbody = table.getElementsByTagName("tbody")[0];
@@ -408,19 +378,10 @@
                 tbody.removeChild(tbody.firstChild);
             }
             $.ajax({
-                type: "POST", // method request
-                url: "/process-form", // url request
-                data: $('form').serialize(), // data yang dikirimkan
-                success: function (result) { // response sukses
-                    // $("#message").text("Command: " + result.message);
-                    // $.each(result, function (key, value) {
-                    //     console.log(key + ": " + value);
-                    //     // atau Anda bisa menambahkan kode untuk menampilkan data tersebut di halaman web
-                    // });
-                    // var html = '';
-                    // $.each(result, function (key, value) {
-
-                    // });
+                type: "POST", 
+                url: "/process-form", 
+                data: $('form').serialize(), 
+                success: function (result) { 
                     result["row"] = []
                     var tableHeaderRow = table.insertRow();
                     var headerKeys = Object.keys(result);
@@ -501,24 +462,6 @@
                             }
                             console.log(dictionary)
                             var tempkey = dataRow.children[indekskey].textContent;
-                            // if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(tempkey)) {
-                            //     dataRow.classList.add("clicked-row");
-                            // }
-                            // dataRow.addEventListener("click", function () {
-                            //     if (dictionary.hasOwnProperty(commandsend) && dictionary[commandsend].hasOwnProperty(key)) {
-                            //         this.classList.add("clicked-row");
-                            //     }
-                            //     if (!this.classList.contains("clicked-row")) {
-                            //         for (var i = 0; i < dataRow.cells.length; i++) {
-                            //             var value = this.cells[i].textContent;
-                            //             addToDictionary(commandsend, key, value);
-                            //         }
-                            //         this.classList.add("clicked-row");
-                            //     } else {
-                            //         removeFromDictionary(commandsend, key)
-                            //         this.classList.remove("clicked-row");
-                            //     }
-                            // });
                         }
                     }
                     else {
@@ -564,17 +507,9 @@
                             rowindex++;
                         }
                     }
-                    // for (var key in result) {
-                    //     var row = table.insertRow();
-                    //     var cell1 = row.insertCell(0);
-                    //     var cell2 = row.insertCell(1);
-                    //     cell1.innerHTML = key;
-                    //     cell2.innerHTML = result[key];
-                    // }
-                    // $('#result').html(html);
                 },
-                error: function (xhr, status, error) { // response gagal
-                    console.log(xhr.responseText); // menampilkan pesan error di console log
+                error: function (xhr, status, error) { 
+                    console.log(xhr.responseText);
                 }
             });
             tbody.innerHTML = "";
@@ -587,8 +522,8 @@
                 $(this).toggleClass('dim');
             });
         });
-        var button = document.getElementById("sidebarCollapse"); // Ganti "myButton" dengan ID tombol Anda
-        var sidebar = document.getElementById("sidebar"); // Ganti "mySidebar" dengan ID sidebar Anda
+        var button = document.getElementById("sidebarCollapse"); 
+        var sidebar = document.getElementById("sidebar"); 
 
         function shiftButton() {
             if (sidebar.classList.contains("active")) {
@@ -596,7 +531,7 @@
                 document.querySelector("#content").style.marginLeft = "0";
             } else {
                 button.style.left = "260px";
-                document.querySelector("#content").style.marginLeft = "300px"; // Ganti "200px" dengan jarak yang diinginkan dari sisi kanan
+                document.querySelector("#content").style.marginLeft = "300px"; 
             }
         }
 
@@ -608,9 +543,7 @@
 
 
         function addToDictionary(command, key, value) {
-            // console.log(dictionary)
             if (dictionary.hasOwnProperty(command)) {
-                // Memeriksa apakah key3 ada dalam key1
                 if (dictionary[command].hasOwnProperty(key)) {
                     dictionary[command][key].push(value);
                 } else {
@@ -620,18 +553,15 @@
                 dictionary[command] = {};
                 dictionary[command][key] = [value];
             }
-            // console.log(dictionary)
         }
 
         function removeFromDictionary(command, key) {
             console.log(dictionary)
             if (dictionary.hasOwnProperty(command)) {
-                // Memeriksa apakah key3 ada dalam key1
                 if (dictionary[command].hasOwnProperty(key)) {
                     delete dictionary[command][key];
                 }
             }
-            // console.log(dictionary)
         }
 
         var filepath = "{{ file_path }}" + "/static/reports";
@@ -639,14 +569,14 @@
             event.preventDefault()
 
             $.ajax({
-                type: "POST", // method request
-                url: "/generate_report", // url request
-                data: JSON.stringify(dictionary), // data yang dikirimkan
+                type: "POST", 
+                url: "/generate_report", 
+                data: JSON.stringify(dictionary), 
                 contentType: 'application/json',
-                success: function (result) { // response sukses
+                success: function (result) { 
                     alert('File berhasil diunduh pada ' + filepath);
                     $.ajax({
-                        url: '/open_report',  // URL endpoint Flask
+                        url: '/open_report',
                         type: 'GET',
                         success: function (response) {
                             var file = new Blob([response], { type: 'text/html' });
@@ -662,8 +592,8 @@
                         }
                     });
                 },
-                error: function (xhr, status, error) { // response gagal
-                    console.log(xhr.responseText); // menampilkan pesan error di console log
+                error: function (xhr, status, error) { 
+                    console.log(xhr.responseText); 
                 }
             });
         }

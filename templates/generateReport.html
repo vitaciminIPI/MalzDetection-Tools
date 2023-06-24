@@ -9,13 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <style>
-        #side_nav {
-            background: black;
-            min-width: 250px;
-            max-width: 250px;
-            padding-top: 5vh;
-        }
-
         .navbar {
             margin: 0;
             padding: 0;
@@ -23,10 +16,6 @@
 
         .custom-navbar .navbar {
             padding: 0 !important;
-        }
-
-        li {
-            color: white;
         }
 
         .vl {
@@ -43,32 +32,6 @@
             width: 210px;
             font-size: 18px;
             outline: none;
-        }
-
-        .subparser {
-            margin-bottom: 20px;
-        }
-
-        .messagecommand {
-            color: white;
-        }
-
-        .center {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .btn-circle {
-            border-radius: 50%;
-            height: 10em;
-            width: 10em;
-            font-size: 1.5em;
-            color: black;
-            background-color: grey;
-            border: none;
-            cursor: pointer;
         }
 
         .section {
@@ -89,10 +52,6 @@
             border-radius: 4px;
             margin-bottom: 10px;
         }
-
-        /*
-    DEMO STYLE
-*/
 
         @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
 
@@ -143,10 +102,6 @@
             border-bottom: 1px dashed #ddd;
             margin: 40px 0;
         }
-
-        /* ---------------------------------------------------
-    SIDEBAR STYLE
------------------------------------------------------ */
 
         .wrapper {
             display: flex;
@@ -222,10 +177,6 @@
             margin-bottom: 5px;
         }
 
-        /* ---------------------------------------------------
-    CONTENT STYLE
------------------------------------------------------ */
-
         #content {
             width: 100%;
             padding: 20px;
@@ -233,8 +184,6 @@
             transition: all 0.3s;
             height: auto;
             margin-left: 300px;
-            /* position: absolute; */
-            /* background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("background.jpg"); */
         }
 
         table {
@@ -252,10 +201,6 @@
         th {
             background-color: green;
         }
-
-        /* ---------------------------------------------------
-    MEDIAQUERIES
------------------------------------------------------ */
 
         @media (max-width: 768px) {
             #sidebar {
@@ -304,15 +249,10 @@
             opacity: 0;
         }
     </style>
-    <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <!-- Our Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="./style.css">
 
-    <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
-
-    <!-- Font Awesome JS -->
     <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
         integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
         crossorigin="anonymous"></script>
@@ -327,7 +267,6 @@
 
 <body>
     <div class="wrapper">
-        <!-- Sidebar  -->
         <nav id="sidebar" style="height: 100%;">
 
             <ul class="list-unstyled components">
@@ -347,12 +286,9 @@
                         <br><a class="button" href="#section12">Windows.Cmdline</a>
                     </nav>
                 </form>
-                <!-- <form name="my-form" id="my-form" action="#" method="post">
-                </form> -->
             </ul>
         </nav>
 
-        <!-- Page Content  -->
         <div id="content">
             <button type="button" id="sidebarCollapse" class="btn btn-info">
                 <i class="fas fa-align-left"></i>
@@ -640,163 +576,39 @@
             var section12Content = section12Element.innerHTML;
 
             if (section2Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section2Element.style.display = 'none';
             }
             if (section3Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section3Element.style.display = 'none';
             }
             if (section4Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section4Element.style.display = 'none';
             }
             if (section5Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section5Element.style.display = 'none';
             }
             if (section6Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section6Element.style.display = 'none';
             }
             if (section7Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section7Element.style.display = 'none';
             }
             if (section8Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section8Element.style.display = 'none';
             }
             if (section9Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section9Element.style.display = 'none';
             }
             if (section10Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section10Element.style.display = 'none';
             }
             if (section11Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section11Element.style.display = 'none';
             }
             if (section12Content.includes('kosong')) {
-                // Jika terdapat, hilangkan section tersebut
                 section12Element.style.display = 'none';
             }
         };
-        
-        function showInput() {
-            var pidField = document.getElementById("pid-field");
-            var offsetField = document.getElementById("offset-field");
-            var keyField = document.getElementById("key-field");
-            var dumpCheck = document.getElementById("dump");
-            var physicalField = document.getElementById("physical-field");
-            var includeCorrupt = document.getElementById("include-corrupt");
-            var recurseCheck = document.getElementById("recurse");
-            var command = document.getElementById("command").value;
-            
-            if (command == "pslist" || command == "pstree" || command == "psscan" || command == "dlllist" || command == "handles" || command == "malfind" || command == "cmdline") {
-                pidField.style.display = "block";
-            } else {
-                pidField.style.display = "none";
-            }
-            if (command == "pslist" || command == "pstree" || command == "psscan") {
-                physicalField.style.display = "block";
-            } else {
-                physicalField.style.display = "none";
-            }
-            if (command == "printkey") {
-                offsetField.style.display = "block";
-                keyField.style.display = "block";
-                recurseCheck.style.display = "block";
-            } else {
-                offsetField.style.display = "none";
-                keyField.style.display = "none";
-                recurseCheck.style.display = "none";
-            }
-            if (command == "netscan" || command == "netstat") {
-                includeCorrupt.style.display = "block";
-            } else {
-                includeCorrupt.style.display = "none";
-            }
-            if (command == "pslist" || command == "psscan" || command == "dlllist" || command == "malfind") {
-                dumpCheck.style.display = "block";
-            } else {
-                dumpCheck.style.display = "none";
-            }
-        }
-        function openFileExplorer() {
-            // Membuat elemen input untuk memilih file
-            var input = document.createElement('input');
-            input.type = 'file';
-
-            // Menambahkan event listener untuk mendapatkan path file yang dipilih
-            input.onchange = function (event) {
-                var file = event.target.files[0];
-
-                // Memeriksa apakah file yang dipilih valid
-                if (file) {
-                    // Mengambil nilai 'name' dari file yang dipilih
-                    var path = file.name;
-
-                    // Mengubah value dari input text dengan id 'file' menjadi path file yang dipilih
-                    document.getElementById('file-path').value = path;
-                } else {
-                    console.log('Tidak ada file yang dipilih.');
-                }
-            };
-
-            // Membuka file explorer
-            input.click();
-        }
-        document.getElementById("my-form").addEventListener("submit", function (event) {
-            event.preventDefault();
-            var pidValue = document.getElementById("pid-fieldvalue").value;
-            var offsetValue = document.getElementById("offset-fieldvalue").value;
-            var keyValue = document.getElementById("key-fieldvalue").value;
-            if (document.getElementById("dumpCheck").checked) {
-                document.getElementById("dumpCheck").value = "true"
-            } else {
-                document.getElementById("dumpCheck").value = "false"
-            }
-            if (document.getElementById("include-corruptCheck").checked) {
-                document.getElementById("include-corruptCheck").value = "true";
-            } else {
-                document.getElementById("include-corruptCheck").value = "false"
-            }
-            if (document.getElementById("recurseCheck").checked) {
-                document.getElementById("recurseCheck").value = "true";
-            } else {
-                document.getElementById("recurseCheck").value = "false"
-            }
-            if (document.getElementById("physical-check").checked) {
-                document.getElementById("physical-check").value = "true";
-            } else {
-                document.getElementById("physical-check").value = "false"
-            }
-            var command = document.getElementById("command").value;
-            var filePath = document.getElementById("file-path").value;
-            $.ajax({
-                type: "POST", // method request
-                url: "/process-form", // url request
-                data: $('form').serialize(), // data yang dikirimkan
-                success: function (result) { // response sukses
-                    // $("#message").text("Command: " + result.message);
-                    // $.each(result, function (key, value) {
-                    //     console.log(key + ": " + value);
-                    //     // atau Anda bisa menambahkan kode untuk menampilkan data tersebut di halaman web
-                    // });
-                    var html = '';
-                    $.each(result, function (key, value) {
-                        html += key + ": " + value + "<br>";
-                    });
-                    $('#result').html(html);
-                },
-                error: function (xhr, status, error) { // response gagal
-                    console.log(xhr.responseText); // menampilkan pesan error di console log
-                }
-            });
-        });
 
         $(document).ready(function () {
             $('#sidebarCollapse').on('click', function () {
@@ -850,13 +662,4 @@
         });
     </script>
 </body>
-
-
 </html>
-<!-- @app.route('/process-form', methods=['POST'])
-def process_form():
-    command = request.form.get("physical-check")
-    if command == 'true':
-        return jsonify({"message": "true"})       
-    else:
-        return jsonify({"message": "false"}) -->
